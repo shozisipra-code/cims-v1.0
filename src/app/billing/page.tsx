@@ -396,17 +396,17 @@ export default function BillingPage() {
 
             <div className="card-body" style={{ padding: 24, fontSize: 12 }}>
               {/* Receipt Header */}
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #D3E4F1", paddingBottom: 14, marginBottom: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid var(--border)", paddingBottom: 14, marginBottom: 14 }}>
                 <div>
-                  <h2 style={{ fontSize: 16, fontWeight: 800, color: "#1E3A5F" }}>CIMS CLINICAL CARE</h2>
-                  <p style={{ fontSize: 11, color: "#6d7c90" }}>Clinical Integrated Management System</p>
-                  <p style={{ fontSize: 10.5, color: "#6d7c90" }}>740 Health Boulevard • Tel: +1 (555) 010-CIMS</p>
+                  <h2 style={{ fontSize: 16, fontWeight: 800, color: "var(--primary)" }}>CIMS CLINICAL CARE</h2>
+                  <p style={{ fontSize: 11, color: "var(--text-muted)" }}>Clinical Integrated Management System</p>
+                  <p style={{ fontSize: 10.5, color: "var(--text-muted)" }}>740 Health Boulevard • Tel: +1 (555) 010-CIMS</p>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <strong style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "#1E3A5F" }}>
+                  <strong style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--primary)" }}>
                     {receiptInvoice.invoiceNumber}
                   </strong>
-                  <div style={{ fontSize: 11, color: "#6d7c90" }}>{formatDate(receiptInvoice.createdAt)}</div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{formatDate(receiptInvoice.createdAt)}</div>
                   <span
                     className={`badge ${receiptInvoice.status === "PAID" ? "badge-green" : "badge-red"}`}
                     style={{ marginTop: 4 }}
@@ -417,34 +417,34 @@ export default function BillingPage() {
               </div>
 
               {/* Patient Info */}
-              <div style={{ background: "#F2F8FD", padding: 10, borderRadius: 6, marginBottom: 14, display: "flex", justifyContent: "space-between" }}>
+              <div style={{ background: "var(--surface-2)", padding: 10, borderRadius: 6, marginBottom: 14, display: "flex", justifyContent: "space-between" }}>
                 <div>
-                  <span style={{ fontSize: 10, textTransform: "uppercase", color: "#6d7c90", fontWeight: 700, display: "block" }}>
+                  <span style={{ fontSize: 10, textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 700, display: "block" }}>
                     Patient Name
                   </span>
                   <strong>{receiptInvoice.patient.firstName} {receiptInvoice.patient.lastName}</strong>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <span style={{ fontSize: 10, textTransform: "uppercase", color: "#6d7c90", fontWeight: 700, display: "block" }}>
+                  <span style={{ fontSize: 10, textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 700, display: "block" }}>
                     MRN
                   </span>
-                  <strong style={{ fontFamily: "var(--font-mono)", color: "#1E3A5F" }}>{receiptInvoice.patient.mrn}</strong>
+                  <strong style={{ fontFamily: "var(--font-mono)", color: "var(--primary)" }}>{receiptInvoice.patient.mrn}</strong>
                 </div>
               </div>
 
               {/* Itemized Table */}
               <table style={{ width: "100%", marginBottom: 14 }}>
                 <thead>
-                  <tr style={{ borderBottom: "1px solid #D3E4F1" }}>
-                    <th style={{ textAlign: "left", padding: "6px 0", fontSize: 10.5, textTransform: "uppercase", color: "#6d7c90" }}>Service</th>
-                    <th style={{ textAlign: "center", padding: "6px 0", fontSize: 10.5, textTransform: "uppercase", color: "#6d7c90" }}>Qty</th>
-                    <th style={{ textAlign: "right", padding: "6px 0", fontSize: 10.5, textTransform: "uppercase", color: "#6d7c90" }}>Unit</th>
-                    <th style={{ textAlign: "right", padding: "6px 0", fontSize: 10.5, textTransform: "uppercase", color: "#6d7c90" }}>Total</th>
+                  <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                    <th style={{ textAlign: "left", padding: "6px 0", fontSize: 10.5, textTransform: "uppercase", color: "var(--text-muted)" }}>Service</th>
+                    <th style={{ textAlign: "center", padding: "6px 0", fontSize: 10.5, textTransform: "uppercase", color: "var(--text-muted)" }}>Qty</th>
+                    <th style={{ textAlign: "right", padding: "6px 0", fontSize: 10.5, textTransform: "uppercase", color: "var(--text-muted)" }}>Unit</th>
+                    <th style={{ textAlign: "right", padding: "6px 0", fontSize: 10.5, textTransform: "uppercase", color: "var(--text-muted)" }}>Total</th>
                   </tr>
                 </thead>
                 <tbody>
                   {receiptInvoice.items?.map((item: any) => (
-                    <tr key={item.id} style={{ borderBottom: "1px solid #F2F8FD" }}>
+                    <tr key={item.id} style={{ borderBottom: "1px solid var(--border)" }}>
                       <td style={{ padding: "6px 0" }}>{item.description}</td>
                       <td style={{ textAlign: "center", padding: "6px 0" }}>{item.quantity}</td>
                       <td style={{ textAlign: "right", padding: "6px 0" }}>{formatCurrency(item.unitPrice)}</td>
@@ -457,27 +457,27 @@ export default function BillingPage() {
               </table>
 
               {/* Totals Summary */}
-              <div style={{ borderTop: "1px solid #D3E4F1", paddingTop: 10, display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ borderTop: "1px solid var(--border)", paddingTop: 10, display: "flex", flexDirection: "column", gap: 4 }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "#6d7c90" }}>Subtotal:</span>
+                  <span style={{ color: "var(--text-muted)" }}>Subtotal:</span>
                   <span>{formatCurrency(receiptInvoice.subtotal)}</span>
                 </div>
                 {receiptInvoice.tax > 0 && (
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ color: "#6d7c90" }}>Tax:</span>
+                    <span style={{ color: "var(--text-muted)" }}>Tax:</span>
                     <span>{formatCurrency(receiptInvoice.tax)}</span>
                   </div>
                 )}
-                <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 800, fontSize: 14, borderTop: "1px solid #D3E4F1", paddingTop: 6, color: "#1E3A5F" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 800, fontSize: 14, borderTop: "1px solid var(--border)", paddingTop: 6, color: "var(--primary)" }}>
                   <span>Total Amount:</span>
                   <span>{formatCurrency(receiptInvoice.totalAmount)}</span>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", color: "#1E8449", fontWeight: 700 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", color: "var(--success)", fontWeight: 700 }}>
                   <span>Paid ({receiptInvoice.paymentMethod || "Cash"}):</span>
                   <span>{formatCurrency(receiptInvoice.paidAmount)}</span>
                 </div>
                 {receiptInvoice.balanceDue > 0 && (
-                  <div style={{ display: "flex", justifyContent: "space-between", color: "#A50020", fontWeight: 700 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", color: "var(--danger)", fontWeight: 700 }}>
                     <span>Balance Due:</span>
                     <span>{formatCurrency(receiptInvoice.balanceDue)}</span>
                   </div>
