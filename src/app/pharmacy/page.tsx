@@ -1,39 +1,21 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  Pill,
-  Search,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
-  Package,
-  Plus,
-  ArrowRight,
-  TrendingDown,
-  X,
-} from "lucide-react";
-import { formatDate, formatDateTime, formatCurrency } from "@/lib/utils";
+import { formatDateTime } from "@/lib/utils";
 import { useRole } from "@/components/layout/RoleContext";
 
 export default function PharmacyPage() {
   const { currentUser } = useRole();
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
-  const [medications, setMedications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"prescriptions" | "inventory">("prescriptions");
-
-  // Dispensing state
   const [dispensingId, setDispensingId] = useState<string | null>(null);
 
   const fetchPharmacyData = () => {
     setLoading(true);
-    Promise.all([
-      fetch("/api/prescriptions").then((r) => r.json()),
-      fetch("/api/admin/audit").then((r) => r.json()),
-    ])
-      .then(([rxData]) => {
-        if (rxData.success) setPrescriptions(rxData.prescriptions);
+    fetch("/api/prescriptions")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) setPrescriptions(data.prescriptions);
       })
       .catch((e) => console.error(e))
       .finally(() => setLoading(false));
@@ -71,135 +53,123 @@ export default function PharmacyPage() {
   const pendingCount = prescriptions.filter((p) => p.status === "PENDING").length;
 
   return (
-    <div className="space-y-6">
+    <div className="pharmacy-page">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2.5">
-            <Pill className="w-6 h-6 text-emerald-600" />
-            Pharmacy & Medication Dispensing
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Real-time electronic prescription queue fulfillment, drug formulary, and automated stock deduction.
+          <h1 className="page-title">Pharmacy & Medication Dispensing</h1>
+          <p className="page-subtitle">
+            Outpatient prescription fulfillment, formulary inventory management, and automated stock deductions.
           </p>
         </div>
 
-        {/* Counter Badge */}
-        <div className="flex items-center gap-3">
-          <div className="px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-bold text-emerald-800 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-emerald-600" />
-            <span>{pendingCount} Prescriptions Awaiting Dispensing</span>
-          </div>
+        <div className="badge badge-amber" style={{ fontSize: 12, padding: "6px 12px" }}>
+          {pendingCount} Prescriptions Awaiting Fulfillment
         </div>
       </div>
 
-      {/* Prescriptions List */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-            Outpatient Prescription Dispensing Worklist
-          </h2>
-          <span className="text-[11px] text-slate-400">Linked to Doctor Clinical Consultation Pad</span>
+      {/* Prescriptions Worklist Card */}
+      <div className="card">
+        <div className="card-header">
+          <span className="card-title">Active Prescription Dispensing Queue</span>
+          <span style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
+            Directly linked to EMR consult pad
+          </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
+        <div className="table-wrap">
+          <table>
+            <thead>
               <tr>
-                <th className="px-5 py-3">Prescription Date</th>
-                <th className="px-4 py-3">Patient Name / MRN</th>
-                <th className="px-4 py-3">Prescribing Physician</th>
-                <th className="px-4 py-3">Medications & Regimen</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-5 py-3 text-right">Actions</th>
+                <th>Date & Time</th>
+                <th>Patient Details</th>
+                <th>Prescribing Doctor</th>
+                <th>Medications Regimen</th>
+                <th>Status</th>
+                <th style={{ textAlign: "right" }}>Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan={6} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
                     Loading prescription queue...
                   </td>
                 </tr>
               ) : prescriptions.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
-                    No active prescriptions.
+                  <td colSpan={6} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
+                    No active prescriptions in queue.
                   </td>
                 </tr>
               ) : (
                 prescriptions.map((rx) => (
-                  <tr key={rx.id} className="hover:bg-slate-50/80 transition">
-                    <td className="px-5 py-3.5 whitespace-nowrap">
-                      <p className="font-semibold text-slate-800">{formatDateTime(rx.createdAt)}</p>
+                  <tr key={rx.id}>
+                    <td>
+                      <div style={{ fontWeight: 600 }}>{formatDateTime(rx.createdAt)}</div>
                       {rx.dispensedAt && (
-                        <p className="text-[10px] text-emerald-600">
+                        <div style={{ fontSize: 10.5, color: "var(--success)" }}>
                           Dispensed: {formatDateTime(rx.dispensedAt)}
-                        </p>
+                        </div>
                       )}
                     </td>
 
-                    <td className="px-4 py-3.5">
-                      <p className="font-bold text-slate-900">
-                        {rx.patient.firstName} {rx.patient.lastName}
-                      </p>
-                      <p className="text-[11px] font-mono text-teal-700">{rx.patient.mrn}</p>
+                    <td>
+                      <strong>{rx.patient.firstName} {rx.patient.lastName}</strong>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-muted)" }}>
+                        {rx.patient.mrn}
+                      </div>
                     </td>
 
-                    <td className="px-4 py-3.5">
-                      <p className="font-semibold text-slate-800">{rx.doctor.name}</p>
-                      <p className="text-[11px] text-slate-500">{rx.doctor.department}</p>
+                    <td>
+                      <div>{rx.doctor.name}</div>
+                      <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{rx.doctor.department}</span>
                     </td>
 
                     {/* Medications Items */}
-                    <td className="px-4 py-3.5">
-                      <div className="space-y-1.5 max-w-md">
+                    <td style={{ maxWidth: 360 }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                         {rx.items?.map((item: any) => (
                           <div
                             key={item.id}
-                            className="p-1.5 bg-slate-50 rounded border border-slate-200 text-[11px]"
+                            style={{
+                              background: "var(--surface-2)",
+                              padding: "4px 8px",
+                              borderRadius: 4,
+                              fontSize: 11.5,
+                              border: "1px solid var(--border)",
+                            }}
                           >
-                            <div className="flex items-center justify-between font-bold text-slate-800">
-                              <span>{item.medicationName}</span>
-                              <span className="text-teal-700">Qty: {item.quantity}</span>
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                              <strong style={{ color: "var(--primary)" }}>{item.medicationName}</strong>
+                              <span className="badge badge-gray" style={{ fontSize: 10 }}>Qty: {item.quantity}</span>
                             </div>
-                            <p className="text-slate-500 text-[10px]">
+                            <div style={{ fontSize: 10.5, color: "var(--text-muted)" }}>
                               {item.dosage} • {item.frequency} • {item.duration}
-                            </p>
-                            {item.instructions && (
-                              <p className="text-slate-400 text-[9px] italic">{item.instructions}</p>
-                            )}
+                            </div>
                           </div>
                         ))}
                       </div>
                     </td>
 
-                    {/* Status */}
-                    <td className="px-4 py-3.5 whitespace-nowrap">
-                      <span
-                        className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
-                          rx.status === "DISPENSED"
-                            ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                            : "bg-amber-100 text-amber-800 border border-amber-200"
-                        }`}
-                      >
+                    <td>
+                      <span className={`badge ${rx.status === "DISPENSED" ? "badge-green" : "badge-amber"}`}>
                         {rx.status}
                       </span>
                     </td>
 
-                    {/* Action */}
-                    <td className="px-5 py-3.5 text-right whitespace-nowrap">
+                    <td style={{ textAlign: "right" }}>
                       {rx.status === "PENDING" ? (
                         <button
+                          type="button"
                           onClick={() => handleDispense(rx.id)}
                           disabled={dispensingId === rx.id}
-                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs transition shadow-sm disabled:opacity-50 flex items-center gap-1.5 ml-auto"
+                          className="btn btn-success btn-sm"
                         >
-                          <CheckCircle2 className="w-3.5 h-3.5" />
                           {dispensingId === rx.id ? "Dispensing..." : "Fulfill & Dispense"}
                         </button>
                       ) : (
-                        <span className="text-[11px] text-slate-400 italic">
+                        <span style={{ fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>
                           Dispensed by {rx.dispensedBy || "Pharmacy"}
                         </span>
                       )}

@@ -2,20 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import {
-  CalendarDays,
-  Clock,
-  UserCheck,
-  Plus,
-  Search,
-  Filter,
-  Stethoscope,
-  CheckCircle2,
-  AlertCircle,
-  X,
-  ArrowRight,
-  Heart,
-} from "lucide-react";
 import { formatDateTime, getBloodPressureStatus } from "@/lib/utils";
 import { useRole } from "@/components/layout/RoleContext";
 
@@ -54,7 +40,6 @@ export default function AppointmentsPage() {
   useEffect(() => {
     fetchAppointments();
 
-    // Fetch patients and doctors for the booking dropdown
     fetch("/api/patients")
       .then((r) => r.json())
       .then((d) => {
@@ -128,226 +113,242 @@ export default function AppointmentsPage() {
   const completedCount = appointments.filter((a) => a.status === "COMPLETED").length;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="appointments-page">
+      {/* Page Header */}
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2.5">
-            <CalendarDays className="w-6 h-6 text-amber-500" />
-            OPD Queue & Appointments
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Real-time outpatient tokens, triage queue management, and consultation scheduling.
+          <h1 className="page-title">Patient Booking & OPD Queue</h1>
+          <p className="page-subtitle">
+            Outpatient tokens, triage queue management, and physician consultations.
           </p>
         </div>
-
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          Check-in / New Appointment
-        </button>
+        <div className="page-actions">
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="btn btn-primary btn-sm"
+          >
+            + Issue Token / Booking
+          </button>
+        </div>
       </div>
 
-      {/* Queue Status Tabs / Metric Counters */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <button
+      {/* 4 Stat Cards Row (LIMS grid-4 style) */}
+      <div className="grid-4" style={{ marginBottom: 16 }}>
+        <div
+          className="stat-card blue"
+          style={{ cursor: "pointer" }}
           onClick={() => setStatusFilter("ALL")}
-          className={`p-4 rounded-xl border text-left transition ${
-            statusFilter === "ALL"
-              ? "bg-slate-900 text-white border-slate-900 shadow-sm"
-              : "bg-white text-slate-700 border-slate-200 hover:border-slate-300"
-          }`}
         >
-          <span className="text-[11px] font-semibold opacity-80 uppercase">All Tokens</span>
-          <p className="text-2xl font-bold mt-1">{appointments.length}</p>
-          <p className="text-[10px] opacity-70 mt-1">Today's total registrations</p>
-        </button>
-
-        <button
-          onClick={() => setStatusFilter("WAITING")}
-          className={`p-4 rounded-xl border text-left transition ${
-            statusFilter === "WAITING"
-              ? "bg-amber-500 text-white border-amber-500 shadow-sm"
-              : "bg-white text-slate-700 border-slate-200 hover:border-amber-300"
-          }`}
-        >
-          <span className="text-[11px] font-semibold opacity-80 uppercase">Waiting in Queue</span>
-          <p className="text-2xl font-bold mt-1">{waitingCount}</p>
-          <p className="text-[10px] opacity-70 mt-1">Seated in waiting lobby</p>
-        </button>
-
-        <button
-          onClick={() => setStatusFilter("IN_CONSULTATION")}
-          className={`p-4 rounded-xl border text-left transition ${
-            statusFilter === "IN_CONSULTATION"
-              ? "bg-teal-600 text-white border-teal-600 shadow-sm"
-              : "bg-white text-slate-700 border-slate-200 hover:border-teal-300"
-          }`}
-        >
-          <span className="text-[11px] font-semibold opacity-80 uppercase">In Consultation</span>
-          <p className="text-2xl font-bold mt-1">{inConsultCount}</p>
-          <p className="text-[10px] opacity-70 mt-1">Inside doctor's chamber</p>
-        </button>
-
-        <button
-          onClick={() => setStatusFilter("COMPLETED")}
-          className={`p-4 rounded-xl border text-left transition ${
-            statusFilter === "COMPLETED"
-              ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-              : "bg-white text-slate-700 border-slate-200 hover:border-emerald-300"
-          }`}
-        >
-          <span className="text-[11px] font-semibold opacity-80 uppercase">Completed</span>
-          <p className="text-2xl font-bold mt-1">{completedCount}</p>
-          <p className="text-[10px] opacity-70 mt-1">Visits finalized today</p>
-        </button>
-      </div>
-
-      {/* Queue Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-            Active Queue Display ({filteredAppointments.length} Entries)
-          </h2>
-          <span className="text-[11px] text-slate-400 font-medium">Auto-sorted by token sequence</span>
+          <div className="stat-label">Total Bookings</div>
+          <div className="stat-value">{appointments.length}</div>
+          <div className="stat-sub">Registered today</div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
+        <div
+          className="stat-card amber"
+          style={{ cursor: "pointer" }}
+          onClick={() => setStatusFilter("WAITING")}
+        >
+          <div className="stat-label">Waiting in Queue</div>
+          <div className="stat-value">{waitingCount}</div>
+          <div className="stat-sub">Awaiting triage / doctor</div>
+        </div>
+
+        <div
+          className="stat-card teal"
+          style={{ cursor: "pointer" }}
+          onClick={() => setStatusFilter("IN_CONSULTATION")}
+        >
+          <div className="stat-label">In Consultation</div>
+          <div className="stat-value">{inConsultCount}</div>
+          <div className="stat-sub">Active visits in chamber</div>
+        </div>
+
+        <div
+          className="stat-card green"
+          style={{ cursor: "pointer" }}
+          onClick={() => setStatusFilter("COMPLETED")}
+        >
+          <div className="stat-label">Completed Visits</div>
+          <div className="stat-value">{completedCount}</div>
+          <div className="stat-sub">Visits finalized today</div>
+        </div>
+      </div>
+
+      {/* Queue Table Card */}
+      <div className="card">
+        <div className="card-header">
+          <span className="card-title">Live Queue Worklist ({filteredAppointments.length})</span>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button
+              type="button"
+              onClick={() => setStatusFilter("ALL")}
+              className={`btn ${statusFilter === "ALL" ? "btn-primary" : "btn-secondary"} btn-sm`}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter("WAITING")}
+              className={`btn ${statusFilter === "WAITING" ? "btn-primary" : "btn-secondary"} btn-sm`}
+            >
+              Waiting
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter("IN_CONSULTATION")}
+              className={`btn ${statusFilter === "IN_CONSULTATION" ? "btn-primary" : "btn-secondary"} btn-sm`}
+            >
+              In Consult
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter("COMPLETED")}
+              className={`btn ${statusFilter === "COMPLETED" ? "btn-primary" : "btn-secondary"} btn-sm`}
+            >
+              Completed
+            </button>
+          </div>
+        </div>
+
+        <div className="table-wrap">
+          <table>
+            <thead>
               <tr>
-                <th className="px-5 py-3">Token #</th>
-                <th className="px-4 py-3">Patient Info</th>
-                <th className="px-4 py-3">Doctor & Dept</th>
-                <th className="px-4 py-3">Triage Vitals</th>
-                <th className="px-4 py-3">Reason / Chief Complaint</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-5 py-3 text-right">Actions</th>
+                <th>Token #</th>
+                <th>Patient Details</th>
+                <th>Assigned Doctor</th>
+                <th>Triage Vitals</th>
+                <th>Reason / Complaint</th>
+                <th>Status</th>
+                <th style={{ textAlign: "right" }}>Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan={7} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
                     Loading queue records...
                   </td>
                 </tr>
               ) : filteredAppointments.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
-                    No appointments matching selected status.
+                  <td colSpan={7} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
+                    No queue tokens for this filter.
                   </td>
                 </tr>
               ) : (
                 filteredAppointments.map((appt) => {
                   const patient = appt.patient;
                   const latestVitals = patient.vitals?.[0];
-                  const bp = latestVitals
-                    ? getBloodPressureStatus(latestVitals.systolicBP, latestVitals.diastolicBP)
-                    : null;
 
                   return (
-                    <tr key={appt.id} className="hover:bg-slate-50/80 transition">
+                    <tr key={appt.id}>
                       {/* Token */}
-                      <td className="px-5 py-3.5 whitespace-nowrap">
-                        <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-900 border border-amber-300 flex items-center justify-center font-extrabold text-sm shadow-sm">
+                      <td>
+                        <span
+                          className="badge badge-blue"
+                          style={{
+                            fontFamily: "var(--font-mono)",
+                            fontSize: 13,
+                            fontWeight: 800,
+                            padding: "4px 10px",
+                          }}
+                        >
                           #{appt.tokenNumber}
-                        </div>
+                        </span>
                       </td>
 
                       {/* Patient */}
-                      <td className="px-4 py-3.5">
-                        <div>
-                          <Link
-                            href={`/patients/${patient.id}`}
-                            className="font-bold text-slate-900 hover:text-teal-700 transition"
-                          >
-                            {patient.firstName} {patient.lastName}
-                          </Link>
-                          <p className="text-[11px] font-mono text-teal-700">{patient.mrn}</p>
-                          <p className="text-[10px] text-slate-400">
-                            {patient.gender} • {patient.phone}
-                          </p>
-                        </div>
+                      <td>
+                        <Link
+                          href={`/patients/${patient.id}`}
+                          style={{
+                            fontWeight: 700,
+                            color: "var(--primary)",
+                            textDecoration: "none",
+                            display: "block",
+                          }}
+                        >
+                          {patient.firstName} {patient.lastName}
+                        </Link>
+                        <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-muted)" }}>
+                          {patient.mrn} • {patient.phone}
+                        </span>
                       </td>
 
                       {/* Doctor */}
-                      <td className="px-4 py-3.5">
-                        <p className="font-semibold text-slate-800">{appt.doctor.name}</p>
-                        <p className="text-[11px] text-slate-500">{appt.department}</p>
+                      <td>
+                        <strong>{appt.doctor.name}</strong>
+                        <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{appt.department}</div>
                       </td>
 
-                      {/* Triage Vitals */}
-                      <td className="px-4 py-3.5">
+                      {/* Vitals */}
+                      <td>
                         {latestVitals ? (
                           <div>
-                            <span className="font-bold text-slate-800">
-                              {latestVitals.systolicBP}/{latestVitals.diastolicBP} mmHg
-                            </span>
-                            <p className="text-[10px] text-slate-400">
-                              HR {latestVitals.heartRate || "--"} • {latestVitals.temperature || "--"}°F
-                            </p>
+                            <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700 }}>
+                              {latestVitals.systolicBP}/{latestVitals.diastolicBP}
+                            </span>{" "}
+                            <span style={{ fontSize: 10.5, color: "var(--text-muted)" }}>mmHg</span>
                           </div>
                         ) : (
-                          <span className="text-[11px] text-amber-700 font-medium bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                            Needs Triage
-                          </span>
+                          <span className="badge badge-amber">Needs Triage</span>
                         )}
                       </td>
 
                       {/* Reason */}
-                      <td className="px-4 py-3.5 max-w-xs">
-                        <p className="truncate text-slate-700 font-medium">
-                          {appt.reason || "Outpatient Consultation"}
-                        </p>
-                        <span className="text-[10px] text-slate-400">{appt.type}</span>
+                      <td>
+                        <div>{appt.reason || "Outpatient Consultation"}</div>
+                        <span style={{ fontSize: 10.5, color: "var(--text-muted)" }}>{appt.type}</span>
                       </td>
 
                       {/* Status */}
-                      <td className="px-4 py-3.5 whitespace-nowrap">
+                      <td>
                         <span
-                          className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                          className={`badge ${
                             appt.status === "WAITING"
-                              ? "bg-amber-100 text-amber-800 border border-amber-200"
+                              ? "badge-amber"
                               : appt.status === "IN_CONSULTATION"
-                              ? "bg-teal-100 text-teal-800 border border-teal-200"
+                              ? "badge-blue"
                               : appt.status === "COMPLETED"
-                              ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                              : "bg-slate-100 text-slate-700"
+                              ? "badge-green"
+                              : "badge-gray"
                           }`}
                         >
                           {appt.status.replace("_", " ")}
                         </span>
                       </td>
 
-                      {/* Actions */}
-                      <td className="px-5 py-3.5 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-2">
+                      {/* Action */}
+                      <td style={{ textAlign: "right" }}>
+                        <div style={{ display: "flex", justifyContent: "flex-end", gap: 6 }}>
                           {appt.status === "WAITING" && (
                             <Link
                               href={`/clinical?patientId=${patient.id}&appointmentId=${appt.id}`}
-                              className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-bold text-[11px] transition shadow-sm flex items-center gap-1"
+                              className="btn btn-primary btn-sm"
                             >
-                              <Stethoscope className="w-3.5 h-3.5" />
-                              Call In
+                              Call In &rarr;
                             </Link>
                           )}
 
                           {appt.status === "IN_CONSULTATION" && (
                             <button
+                              type="button"
                               onClick={() => handleStatusUpdate(appt.id, "COMPLETED")}
-                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] transition"
+                              className="btn btn-success btn-sm"
                             >
-                              Mark Complete
+                              Mark Done
                             </button>
                           )}
 
                           {appt.status !== "COMPLETED" && (
                             <button
+                              type="button"
                               onClick={() => handleStatusUpdate(appt.id, "CANCELLED")}
-                              className="px-2 py-1.5 text-slate-400 hover:text-red-600 text-[11px] font-semibold"
+                              className="btn btn-ghost btn-sm"
+                              style={{ color: "var(--danger)" }}
                             >
                               Cancel
                             </button>
@@ -365,26 +366,46 @@ export default function AppointmentsPage() {
 
       {/* Book Appointment Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
-              <div className="flex items-center gap-2">
-                <CalendarDays className="w-5 h-5 text-amber-500" />
-                <h2 className="text-base font-bold text-slate-800">Check-in & Issue Token</h2>
-              </div>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-700">
-                <X className="w-5 h-5" />
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(11, 25, 42, 0.65)",
+            backdropFilter: "blur(4px)",
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+          }}
+        >
+          <div
+            className="card"
+            style={{
+              maxWidth: 520,
+              width: "100%",
+              boxShadow: "var(--shadow-lg)",
+            }}
+          >
+            <div className="card-header">
+              <span className="card-title">Issue OPD Token & Booking</span>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => setIsModalOpen(false)}
+              >
+                &times;
               </button>
             </div>
 
-            <form onSubmit={handleBook} className="space-y-4 text-xs">
-              <div>
-                <label className="font-semibold text-slate-700 mb-1 block">Select Patient *</label>
+            <form onSubmit={handleBook} className="card-body">
+              <div className="form-group" style={{ marginBottom: 12 }}>
+                <label className="form-label required">Select Patient</label>
                 <select
                   required
+                  className="form-select"
                   value={bookingForm.patientId}
                   onChange={(e) => setBookingForm({ ...bookingForm, patientId: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-50"
                 >
                   <option value="">-- Choose Registered Patient --</option>
                   {patients.map((p) => (
@@ -395,38 +416,38 @@ export default function AppointmentsPage() {
                 </select>
               </div>
 
-              <div>
-                <label className="font-semibold text-slate-700 mb-1 block">Assigned Doctor *</label>
+              <div className="form-group" style={{ marginBottom: 12 }}>
+                <label className="form-label required">Assigned Doctor</label>
                 <select
                   required
+                  className="form-select"
                   value={bookingForm.doctorId}
                   onChange={(e) => setBookingForm({ ...bookingForm, doctorId: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-50"
                 >
                   {doctors.map((d) => (
                     <option key={d.id} value={d.id}>
-                      {d.name} - {d.department}
+                      {d.name} ({d.department})
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="font-semibold text-slate-700 mb-1 block">Department</label>
+              <div className="form-grid form-grid-2" style={{ marginBottom: 12 }}>
+                <div className="form-group">
+                  <label className="form-label">Department</label>
                   <input
                     type="text"
+                    className="form-input"
                     value={bookingForm.department}
                     onChange={(e) => setBookingForm({ ...bookingForm, department: e.target.value })}
-                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg bg-slate-50"
                   />
                 </div>
-                <div>
-                  <label className="font-semibold text-slate-700 mb-1 block">Visit Type</label>
+                <div className="form-group">
+                  <label className="form-label">Visit Type</label>
                   <select
+                    className="form-select"
                     value={bookingForm.type}
                     onChange={(e) => setBookingForm({ ...bookingForm, type: e.target.value })}
-                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg bg-slate-50"
                   >
                     <option value="OPD">OPD Consultation</option>
                     <option value="FOLLOW_UP">Follow-up</option>
@@ -435,31 +456,27 @@ export default function AppointmentsPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="font-semibold text-slate-700 mb-1 block">Reason for Visit</label>
+              <div className="form-group" style={{ marginBottom: 16 }}>
+                <label className="form-label">Presenting Complaint / Reason</label>
                 <input
                   type="text"
+                  className="form-input"
                   value={bookingForm.reason}
                   onChange={(e) => setBookingForm({ ...bookingForm, reason: e.target.value })}
-                  placeholder="e.g. Cough and mild fever, BP check"
-                  className="w-full px-3 py-1.5 border border-slate-200 rounded-lg bg-slate-50"
+                  placeholder="e.g. Cough and fever, regular hypertension checkup"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
                 <button
                   type="button"
+                  className="btn btn-secondary"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 font-semibold text-slate-600"
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-5 py-2 font-bold bg-amber-600 hover:bg-amber-700 text-white rounded-xl transition disabled:opacity-50"
-                >
-                  {submitting ? "Allocating Token..." : "Confirm & Issue Token"}
+                <button type="submit" disabled={submitting} className="btn btn-primary">
+                  {submitting ? "Issuing..." : "Confirm & Issue Token"}
                 </button>
               </div>
             </form>

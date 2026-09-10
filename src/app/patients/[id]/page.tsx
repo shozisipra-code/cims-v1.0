@@ -3,29 +3,11 @@
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import {
-  Users,
-  ArrowLeft,
-  Calendar,
-  Clock,
-  Heart,
-  Activity,
-  AlertTriangle,
-  Stethoscope,
-  Pill,
-  FlaskConical,
-  CreditCard,
-  Plus,
-  FileText,
-  CheckCircle2,
-  X,
-} from "lucide-react";
-import {
   calculateAge,
   formatDate,
   formatDateTime,
   formatCurrency,
   getBloodPressureStatus,
-  calculateBMI,
 } from "@/lib/utils";
 import { useRole } from "@/components/layout/RoleContext";
 
@@ -106,7 +88,7 @@ export default function PatientDetailPage({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20 text-slate-400 text-xs">
+      <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)", fontSize: 13 }}>
         Loading patient 360 profile...
       </div>
     );
@@ -114,9 +96,9 @@ export default function PatientDetailPage({
 
   if (!patient) {
     return (
-      <div className="p-8 text-center bg-white rounded-xl border border-slate-200">
-        <p className="text-slate-600 font-bold mb-2">Patient not found</p>
-        <Link href="/patients" className="text-xs text-teal-600 hover:underline">
+      <div className="card" style={{ padding: 40, textAlign: "center" }}>
+        <h3 style={{ color: "var(--text-primary)", marginBottom: 8 }}>Patient not found</h3>
+        <Link href="/patients" className="btn btn-primary btn-sm">
           Return to Patient Directory
         </Link>
       </div>
@@ -137,277 +119,194 @@ export default function PatientDetailPage({
     chronicConditions = patient.chronicConditions ? [patient.chronicConditions] : [];
   }
 
-  const latestVitals = patient.vitals?.[0];
-  const bpStatus = latestVitals
-    ? getBloodPressureStatus(latestVitals.systolicBP, latestVitals.diastolicBP)
-    : null;
-
   return (
-    <div className="space-y-6">
-      {/* Top Breadcrumb */}
-      <div className="flex items-center gap-2 text-xs text-slate-500">
-        <Link href="/patients" className="hover:text-teal-600 flex items-center gap-1 font-medium">
-          <ArrowLeft className="w-3.5 h-3.5" />
-          Back to Patient Directory
-        </Link>
-        <span>/</span>
-        <span className="text-slate-800 font-semibold">{patient.mrn}</span>
-      </div>
-
-      {/* Patient 360 Header Card */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-          <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-teal-600 to-teal-800 text-white font-bold text-xl flex items-center justify-center shadow-md shadow-teal-700/20 flex-shrink-0">
-              {patient.firstName[0]}
-              {patient.lastName[0]}
-            </div>
-
-            <div>
-              <div className="flex flex-wrap items-center gap-2.5">
-                <h1 className="text-xl md:text-2xl font-bold text-slate-900">
-                  {patient.firstName} {patient.lastName}
-                </h1>
-                <span className="font-mono text-xs px-2.5 py-0.5 rounded-full bg-teal-50 border border-teal-200 text-teal-800 font-bold">
-                  {patient.mrn}
-                </span>
-                {patient.bloodGroup && (
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-red-50 border border-red-200 text-red-700 font-bold">
-                    Blood {patient.bloodGroup}
-                  </span>
-                )}
-              </div>
-
-              <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 mt-2">
-                <span>
-                  <strong className="text-slate-700">Age:</strong> {calculateAge(patient.dateOfBirth)} yrs ({formatDate(patient.dateOfBirth)})
-                </span>
-                <span>•</span>
-                <span>
-                  <strong className="text-slate-700">Gender:</strong> {patient.gender}
-                </span>
-                <span>•</span>
-                <span>
-                  <strong className="text-slate-700">Phone:</strong> {patient.phone}
-                </span>
-                {patient.nationalId && (
-                  <>
-                    <span>•</span>
-                    <span>
-                      <strong className="text-slate-700">National ID:</strong> {patient.nationalId}
-                    </span>
-                  </>
-                )}
-              </div>
-
-              {/* Emergency Contact */}
-              {patient.emergencyContactName && (
-                <div className="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1.5">
-                  <span className="text-slate-400 font-medium">Emergency Contact:</span>
-                  <span className="font-semibold text-slate-700">
-                    {patient.emergencyContactName} ({patient.emergencyContactRelation || "Relative"})
-                  </span>
-                  <span>• {patient.emergencyContactPhone}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <button
-              onClick={() => setIsVitalsModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border border-teal-600 text-teal-700 hover:bg-teal-50 transition"
-            >
-              <Heart className="w-4 h-4" />
-              Record Vitals
-            </button>
+    <div className="patient-detail-page">
+      {/* Breadcrumb / Header */}
+      <div className="page-header">
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
             <Link
-              href={`/clinical?patientId=${patient.id}`}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white transition shadow-sm"
+              href="/patients"
+              style={{ fontSize: 12, color: "var(--primary)", textDecoration: "none", fontWeight: 600 }}
             >
-              <Stethoscope className="w-4 h-4" />
-              Start Consultation
+              &larr; Patients Directory
             </Link>
+            <span style={{ color: "var(--text-muted)", fontSize: 12 }}>/</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 700 }}>
+              {patient.mrn}
+            </span>
           </div>
+          <h1 className="page-title">
+            {patient.firstName} {patient.lastName}
+          </h1>
+          <p className="page-subtitle">
+            {calculateAge(patient.dateOfBirth)} years old • {patient.gender} • Blood:{" "}
+            <strong style={{ color: "var(--danger)" }}>{patient.bloodGroup || "Unknown"}</strong>
+          </p>
         </div>
 
-        {/* Clinical Alert Flags Banner */}
-        <div className="mt-5 pt-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Allergies */}
-          <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50/60 border border-amber-200">
-            <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <span className="text-xs font-bold text-amber-900 block">Allergies:</span>
-              <div className="flex flex-wrap gap-1.5 mt-1">
-                {allergies.length > 0 && allergies[0] !== "None known" ? (
-                  allergies.map((a, i) => (
-                    <span
-                      key={i}
-                      className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-900"
-                    >
-                      {a}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-xs text-amber-800">No known drug allergies (NKDA)</span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Chronic Conditions */}
-          <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200">
-            <Activity className="w-4 h-4 text-slate-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <span className="text-xs font-bold text-slate-900 block">Chronic Conditions:</span>
-              <div className="flex flex-wrap gap-1.5 mt-1">
-                {chronicConditions.length > 0 && chronicConditions[0] !== "None" ? (
-                  chronicConditions.map((c, i) => (
-                    <span
-                      key={i}
-                      className="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-200 text-slate-800"
-                    >
-                      {c}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-xs text-slate-500">None documented</span>
-                )}
-              </div>
-            </div>
-          </div>
+        <div className="page-actions">
+          <button
+            type="button"
+            onClick={() => setIsVitalsModalOpen(true)}
+            className="btn btn-secondary btn-sm"
+          >
+            Record Vitals
+          </button>
+          <Link
+            href={`/clinical?patientId=${patient.id}`}
+            className="btn btn-primary btn-sm"
+          >
+            Start Consultation &rarr;
+          </Link>
         </div>
       </div>
 
-      {/* Tabs Navigation */}
-      <div className="flex border-b border-slate-200 bg-white rounded-xl px-2 shadow-sm">
+      {/* Patient Overview Card (LIMS style) */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="card-body">
+          <div className="grid-3" style={{ gap: 14 }}>
+            <div>
+              <span className="stat-label">Contact Information</span>
+              <p style={{ marginTop: 4, fontWeight: 600 }}>{patient.phone}</p>
+              <p style={{ fontSize: 11.5, color: "var(--text-muted)" }}>{patient.email || "No email on file"}</p>
+            </div>
+
+            <div>
+              <span className="stat-label">National ID / Address</span>
+              <p style={{ marginTop: 4, fontFamily: "var(--font-mono)", fontSize: 12 }}>
+                {patient.nationalId || "Not provided"}
+              </p>
+              <p style={{ fontSize: 11.5, color: "var(--text-muted)" }}>{patient.address || "No address"}</p>
+            </div>
+
+            <div>
+              <span className="stat-label">Emergency Contact</span>
+              <p style={{ marginTop: 4, fontWeight: 600 }}>
+                {patient.emergencyContactName || "Not assigned"}
+              </p>
+              <p style={{ fontSize: 11.5, color: "var(--text-muted)" }}>
+                {patient.emergencyContactPhone} ({patient.emergencyContactRelation || "Relative"})
+              </p>
+            </div>
+          </div>
+
+          {/* Allergy Alert Banner */}
+          {allergies.length > 0 && allergies[0] !== "None known" && (
+            <div className="alert alert-warning" style={{ marginTop: 14 }}>
+              <span>
+                <strong>Allergy Warning:</strong> Patient has known drug allergies to:{" "}
+                <span style={{ textDecoration: "underline", fontWeight: 700 }}>{allergies.join(", ")}</span>
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Tab Navigation (LIMS button row style) */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 14, overflowX: "auto" }}>
         <button
+          type="button"
           onClick={() => setActiveTab("vitals")}
-          className={`px-4 py-3 text-xs font-bold border-b-2 flex items-center gap-2 transition ${
-            activeTab === "vitals"
-              ? "border-teal-600 text-teal-700"
-              : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
+          className={`btn ${activeTab === "vitals" ? "btn-primary" : "btn-secondary"} btn-sm`}
         >
-          <Heart className="w-4 h-4" />
           Vitals History ({patient.vitals?.length || 0})
         </button>
-
         <button
+          type="button"
           onClick={() => setActiveTab("encounters")}
-          className={`px-4 py-3 text-xs font-bold border-b-2 flex items-center gap-2 transition ${
-            activeTab === "encounters"
-              ? "border-teal-600 text-teal-700"
-              : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
+          className={`btn ${activeTab === "encounters" ? "btn-primary" : "btn-secondary"} btn-sm`}
         >
-          <FileText className="w-4 h-4" />
-          Clinical Visits / SOAP ({patient.encounters?.length || 0})
+          Clinical SOAP Visits ({patient.encounters?.length || 0})
         </button>
-
         <button
+          type="button"
           onClick={() => setActiveTab("prescriptions")}
-          className={`px-4 py-3 text-xs font-bold border-b-2 flex items-center gap-2 transition ${
-            activeTab === "prescriptions"
-              ? "border-teal-600 text-teal-700"
-              : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
+          className={`btn ${activeTab === "prescriptions" ? "btn-primary" : "btn-secondary"} btn-sm`}
         >
-          <Pill className="w-4 h-4" />
           Prescriptions ({patient.prescriptions?.length || 0})
         </button>
-
         <button
+          type="button"
           onClick={() => setActiveTab("labs")}
-          className={`px-4 py-3 text-xs font-bold border-b-2 flex items-center gap-2 transition ${
-            activeTab === "labs"
-              ? "border-teal-600 text-teal-700"
-              : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
+          className={`btn ${activeTab === "labs" ? "btn-primary" : "btn-secondary"} btn-sm`}
         >
-          <FlaskConical className="w-4 h-4" />
           Diagnostic Labs ({patient.labOrders?.length || 0})
         </button>
-
         <button
+          type="button"
           onClick={() => setActiveTab("billing")}
-          className={`px-4 py-3 text-xs font-bold border-b-2 flex items-center gap-2 transition ${
-            activeTab === "billing"
-              ? "border-teal-600 text-teal-700"
-              : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
+          className={`btn ${activeTab === "billing" ? "btn-primary" : "btn-secondary"} btn-sm`}
         >
-          <CreditCard className="w-4 h-4" />
-          Invoices & Payments ({patient.invoices?.length || 0})
+          Invoices & Billing ({patient.invoices?.length || 0})
         </button>
       </div>
 
       {/* Tab 1: Vitals */}
       {activeTab === "vitals" && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-800">Vital Signs & Trend Log</h3>
+        <div className="card">
+          <div className="card-header">
+            <span className="card-title">Vital Signs Trend Log</span>
             <button
+              type="button"
               onClick={() => setIsVitalsModalOpen(true)}
-              className="text-xs text-teal-700 hover:text-teal-800 font-bold flex items-center gap-1"
+              className="btn btn-ghost btn-sm"
+              style={{ color: "var(--primary)" }}
             >
-              <Plus className="w-3.5 h-3.5" />
-              Record New Reading
+              + Record Reading
             </button>
           </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-600">
-              <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-[10px] border-b border-slate-200">
+          <div className="table-wrap">
+            <table>
+              <thead>
                 <tr>
-                  <th className="px-4 py-2.5">Date & Time</th>
-                  <th className="px-4 py-2.5">Blood Pressure</th>
-                  <th className="px-4 py-2.5">Heart Rate</th>
-                  <th className="px-4 py-2.5">Temp</th>
-                  <th className="px-4 py-2.5">SpO2</th>
-                  <th className="px-4 py-2.5">Weight / Height / BMI</th>
-                  <th className="px-4 py-2.5">Glucose</th>
-                  <th className="px-4 py-2.5">Recorded By</th>
+                  <th>Recorded At</th>
+                  <th>Blood Pressure</th>
+                  <th>Heart Rate</th>
+                  <th>Temp</th>
+                  <th>SpO2</th>
+                  <th>Weight / Height / BMI</th>
+                  <th>Glucose</th>
+                  <th>Recorded By</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody>
                 {patient.vitals?.length ? (
                   patient.vitals.map((v: any) => {
                     const status = getBloodPressureStatus(v.systolicBP, v.diastolicBP);
                     return (
-                      <tr key={v.id} className="hover:bg-slate-50">
-                        <td className="px-4 py-3 font-medium text-slate-800 whitespace-nowrap">
+                      <tr key={v.id}>
+                        <td style={{ fontFamily: "var(--font-mono)", fontSize: 11.5 }}>
                           {formatDateTime(v.recordedAt)}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="font-bold text-slate-900">
-                            {v.systolicBP}/{v.diastolicBP} mmHg
+                        <td>
+                          <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700 }}>
+                            {v.systolicBP}/{v.diastolicBP}
                           </span>{" "}
-                          <span className={`text-[10px] px-1.5 py-0.2 rounded font-semibold ${status.color}`}>
+                          <span className={`badge ${status.status === "Normal" ? "badge-green" : "badge-amber"}`}>
                             {status.status}
                           </span>
                         </td>
-                        <td className="px-4 py-3">{v.heartRate ? `${v.heartRate} bpm` : "--"}</td>
-                        <td className="px-4 py-3">{v.temperature ? `${v.temperature}°F` : "--"}</td>
-                        <td className="px-4 py-3">{v.spO2 ? `${v.spO2}%` : "--"}</td>
-                        <td className="px-4 py-3">
+                        <td>{v.heartRate ? `${v.heartRate} bpm` : "--"}</td>
+                        <td>{v.temperature ? `${v.temperature}°F` : "--"}</td>
+                        <td>{v.spO2 ? `${v.spO2}%` : "--"}</td>
+                        <td>
                           {v.weightKg ? `${v.weightKg} kg` : "--"} / {v.heightCm ? `${v.heightCm} cm` : "--"}{" "}
                           {v.bmi && (
-                            <span className="text-[10px] text-teal-700 font-bold ml-1">
-                              (BMI {v.bmi})
+                            <span className="badge badge-teal" style={{ marginLeft: 4 }}>
+                              BMI {v.bmi}
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3">{v.bloodGlucose ? `${v.bloodGlucose} mg/dL` : "--"}</td>
-                        <td className="px-4 py-3 text-slate-500">{v.recordedBy || "Nurse"}</td>
+                        <td>{v.bloodGlucose ? `${v.bloodGlucose} mg/dL` : "--"}</td>
+                        <td style={{ color: "var(--text-muted)" }}>{v.recordedBy || "Nurse"}</td>
                       </tr>
                     );
                   })
                 ) : (
                   <tr>
-                    <td colSpan={8} className="text-center py-8 text-slate-400">
-                      No vitals recorded yet.
+                    <td colSpan={8} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
+                      No vital signs recorded yet.
                     </td>
                   </tr>
                 )}
@@ -419,77 +318,78 @@ export default function PatientDetailPage({
 
       {/* Tab 2: Encounters */}
       {activeTab === "encounters" && (
-        <div className="space-y-4">
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {patient.encounters?.length ? (
             patient.encounters.map((enc: any) => (
-              <div key={enc.id} className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div key={enc.id} className="card">
+                <div className="card-header">
                   <div>
-                    <span className="text-xs font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded">
-                      Encounter Date: {formatDateTime(enc.encounterDate)}
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--primary)" }}>
+                      Consultation: {formatDateTime(enc.encounterDate)}
                     </span>
-                    <p className="text-xs text-slate-600 mt-1">
-                      Attending: <strong className="text-slate-800">{enc.doctor?.name}</strong> ({enc.doctor?.department})
-                    </p>
+                    <span style={{ fontSize: 11, color: "var(--text-muted)", marginLeft: 8 }}>
+                      Attending: {enc.doctor?.name} ({enc.doctor?.department})
+                    </span>
                   </div>
-                  <span
-                    className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                      enc.status === "FINALIZED"
-                        ? "bg-emerald-100 text-emerald-800"
-                        : "bg-amber-100 text-amber-800"
-                    }`}
-                  >
+                  <span className={`badge ${enc.status === "FINALIZED" ? "badge-green" : "badge-amber"}`}>
                     {enc.status}
                   </span>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                  <div>
-                    <p className="font-bold text-slate-800">Chief Complaint:</p>
-                    <p className="text-slate-600 bg-slate-50 p-2.5 rounded-lg mt-1">
-                      {enc.chiefComplaint || "Routine consultation."}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-bold text-slate-800">History of Present Illness (HPI):</p>
-                    <p className="text-slate-600 bg-slate-50 p-2.5 rounded-lg mt-1">
-                      {enc.hpi || "No documented HPI."}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-bold text-slate-800">Physical Examination:</p>
-                    <p className="text-slate-600 bg-slate-50 p-2.5 rounded-lg mt-1">
-                      {enc.physicalExam || "Normal physical findings."}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-bold text-slate-800">Assessment & Plan:</p>
-                    <p className="text-slate-600 bg-slate-50 p-2.5 rounded-lg mt-1">
-                      {enc.assessmentPlan || "Continue care plan."}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Diagnoses */}
-                {enc.diagnoses?.length > 0 && (
-                  <div className="pt-2">
-                    <p className="text-xs font-bold text-slate-800 mb-1">Diagnoses (ICD-10):</p>
-                    <div className="flex flex-wrap gap-2">
-                      {enc.diagnoses.map((d: any) => (
-                        <span
-                          key={d.id}
-                          className="px-2.5 py-1 rounded-lg bg-teal-50 border border-teal-200 text-teal-900 text-xs font-medium"
-                        >
-                          <strong className="font-bold">{d.icdCode}</strong> - {d.description} ({d.type})
-                        </span>
-                      ))}
+                <div className="card-body">
+                  <div className="grid-2" style={{ gap: 12, fontSize: 12.5 }}>
+                    <div>
+                      <strong style={{ display: "block", color: "var(--text-secondary)", marginBottom: 3 }}>
+                        Chief Complaint
+                      </strong>
+                      <p style={{ background: "var(--surface-2)", padding: 10, borderRadius: 6, border: "1px solid var(--border)" }}>
+                        {enc.chiefComplaint || "Routine consultation."}
+                      </p>
+                    </div>
+                    <div>
+                      <strong style={{ display: "block", color: "var(--text-secondary)", marginBottom: 3 }}>
+                        History of Present Illness (HPI)
+                      </strong>
+                      <p style={{ background: "var(--surface-2)", padding: 10, borderRadius: 6, border: "1px solid var(--border)" }}>
+                        {enc.hpi || "None documented."}
+                      </p>
+                    </div>
+                    <div>
+                      <strong style={{ display: "block", color: "var(--text-secondary)", marginBottom: 3 }}>
+                        Physical Examination
+                      </strong>
+                      <p style={{ background: "var(--surface-2)", padding: 10, borderRadius: 6, border: "1px solid var(--border)" }}>
+                        {enc.physicalExam || "Normal physical findings."}
+                      </p>
+                    </div>
+                    <div>
+                      <strong style={{ display: "block", color: "var(--text-secondary)", marginBottom: 3 }}>
+                        Assessment & Plan
+                      </strong>
+                      <p style={{ background: "var(--surface-2)", padding: 10, borderRadius: 6, border: "1px solid var(--border)" }}>
+                        {enc.assessmentPlan || "Continue supportive care."}
+                      </p>
                     </div>
                   </div>
-                )}
+
+                  {enc.diagnoses?.length > 0 && (
+                    <div style={{ marginTop: 12, borderTop: "1px solid var(--border)", paddingTop: 10 }}>
+                      <span className="stat-label" style={{ display: "block", marginBottom: 6 }}>
+                        ICD-10 Diagnoses
+                      </span>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {enc.diagnoses.map((d: any) => (
+                          <span key={d.id} className="badge badge-teal">
+                            <strong>{d.icdCode}</strong> - {d.description} ({d.type})
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             ))
           ) : (
-            <div className="bg-white p-8 rounded-xl border border-slate-200 text-center text-slate-400 text-xs">
+            <div className="card" style={{ padding: 30, textAlign: "center", color: "var(--text-muted)" }}>
               No clinical encounters recorded.
             </div>
           )}
@@ -498,47 +398,60 @@ export default function PatientDetailPage({
 
       {/* Tab 3: Prescriptions */}
       {activeTab === "prescriptions" && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
-          <h3 className="text-sm font-bold text-slate-800">Active & Past Prescriptions</h3>
-          <div className="space-y-3">
+        <div className="card">
+          <div className="card-header">
+            <span className="card-title">Prescription History</span>
+          </div>
+          <div className="card-body" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {patient.prescriptions?.length ? (
               patient.prescriptions.map((rx: any) => (
-                <div key={rx.id} className="p-4 rounded-xl border border-slate-200 bg-slate-50/60 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-slate-800">
-                      Prescribed by {rx.doctor?.name} on {formatDate(rx.createdAt)}
-                    </span>
-                    <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        rx.status === "DISPENSED"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-amber-100 text-amber-800"
-                      }`}
-                    >
+                <div
+                  key={rx.id}
+                  style={{
+                    border: "1px solid var(--border)",
+                    borderRadius: 6,
+                    padding: 12,
+                    background: "var(--surface-2)",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 12 }}>
+                    <strong>Prescribed by {rx.doctor?.name} ({formatDate(rx.createdAt)})</strong>
+                    <span className={`badge ${rx.status === "DISPENSED" ? "badge-green" : "badge-amber"}`}>
                       {rx.status}
                     </span>
                   </div>
 
-                  <div className="divide-y divide-slate-200 border-t border-slate-200 pt-2">
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {rx.items?.map((item: any) => (
-                      <div key={item.id} className="py-2 text-xs flex items-center justify-between">
+                      <div
+                        key={item.id}
+                        style={{
+                          background: "var(--surface)",
+                          padding: "8px 12px",
+                          border: "1px solid var(--border)",
+                          borderRadius: 4,
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          fontSize: 12,
+                        }}
+                      >
                         <div>
-                          <p className="font-bold text-teal-800">{item.medicationName}</p>
-                          <p className="text-slate-500 text-[11px]">
+                          <strong style={{ color: "var(--primary)" }}>{item.medicationName}</strong>
+                          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
                             {item.dosage} • {item.frequency} • {item.duration} ({item.route})
-                          </p>
-                          {item.instructions && (
-                            <p className="text-slate-400 text-[10px] italic">Note: {item.instructions}</p>
-                          )}
+                          </div>
                         </div>
-                        <span className="text-xs font-semibold text-slate-600">Qty: {item.quantity}</span>
+                        <span className="badge badge-gray">Qty: {item.quantity}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-center py-6 text-slate-400 text-xs">No prescriptions on record.</p>
+              <span style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center", padding: 20 }}>
+                No prescriptions on record.
+              </span>
             )}
           </div>
         </div>
@@ -546,47 +459,62 @@ export default function PatientDetailPage({
 
       {/* Tab 4: Labs */}
       {activeTab === "labs" && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
-          <h3 className="text-sm font-bold text-slate-800">Laboratory & Diagnostic Reports</h3>
-          <div className="space-y-4">
+        <div className="card">
+          <div className="card-header">
+            <span className="card-title">Laboratory Diagnostic Orders</span>
+          </div>
+          <div className="card-body" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {patient.labOrders?.length ? (
               patient.labOrders.map((order: any) => (
-                <div key={order.id} className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 space-y-3">
-                  <div className="flex items-center justify-between text-xs">
+                <div
+                  key={order.id}
+                  style={{
+                    border: "1px solid var(--border)",
+                    borderRadius: 6,
+                    padding: 12,
+                    background: "var(--surface-2)",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 12 }}>
                     <div>
-                      <span className="font-mono font-bold text-teal-800">{order.orderNumber}</span>
-                      <span className="text-slate-500 ml-2">Ordered on {formatDate(order.orderedAt)}</span>
+                      <strong style={{ fontFamily: "var(--font-mono)", color: "var(--primary)" }}>
+                        {order.orderNumber}
+                      </strong>
+                      <span style={{ color: "var(--text-muted)", marginLeft: 8 }}>
+                        Ordered {formatDate(order.orderedAt)} by {order.doctor?.name}
+                      </span>
                     </div>
-                    <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        order.status === "COMPLETED"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-blue-100 text-blue-800"
-                      }`}
-                    >
+                    <span className={`badge ${order.status === "COMPLETED" ? "badge-green" : "badge-blue"}`}>
                       {order.status}
                     </span>
                   </div>
 
-                  <div className="space-y-2">
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {order.items?.map((item: any) => (
-                      <div key={item.id} className="p-3 bg-white rounded-lg border border-slate-200 text-xs">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-slate-800">{item.testName}</span>
-                          {item.isAbnormal && (
-                            <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-red-100 text-red-700">
-                              ABNORMAL
-                            </span>
-                          )}
+                      <div
+                        key={item.id}
+                        style={{
+                          background: "var(--surface)",
+                          padding: "8px 12px",
+                          border: "1px solid var(--border)",
+                          borderRadius: 4,
+                          fontSize: 12,
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                          <strong>{item.testName}</strong>
+                          {item.isAbnormal && <span className="badge badge-red">ABNORMAL</span>}
                         </div>
-                        <div className="mt-1 text-slate-600 flex items-baseline gap-2">
-                          <span className="text-sm font-bold text-teal-900">
+                        <div style={{ marginTop: 2, display: "flex", gap: 8, alignItems: "baseline" }}>
+                          <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: 14 }}>
                             {item.resultValue || "Pending Analysis"}
                           </span>
-                          {item.unit && <span className="text-slate-400 text-[11px]">{item.unit}</span>}
+                          <span style={{ color: "var(--text-muted)", fontSize: 11 }}>{item.unit}</span>
                         </div>
                         {item.referenceRange && (
-                          <p className="text-[10px] text-slate-400 mt-1">Ref Range: {item.referenceRange}</p>
+                          <div style={{ fontSize: 10.5, color: "var(--text-muted)", marginTop: 2 }}>
+                            Ref: {item.referenceRange}
+                          </div>
                         )}
                       </div>
                     ))}
@@ -594,7 +522,9 @@ export default function PatientDetailPage({
                 </div>
               ))
             ) : (
-              <p className="text-center py-6 text-slate-400 text-xs">No diagnostic lab orders.</p>
+              <span style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center", padding: 20 }}>
+                No diagnostic lab orders on file.
+              </span>
             )}
           </div>
         </div>
@@ -602,161 +532,191 @@ export default function PatientDetailPage({
 
       {/* Tab 5: Billing */}
       {activeTab === "billing" && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
-          <h3 className="text-sm font-bold text-slate-800">Financial Invoices & Receipts</h3>
-          <div className="space-y-3">
-            {patient.invoices?.length ? (
-              patient.invoices.map((inv: any) => (
-                <div key={inv.id} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-mono font-bold text-slate-800">{inv.invoiceNumber}</span>
-                    <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        inv.status === "PAID"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {inv.status}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs pt-1">
-                    <span className="text-slate-500">Issued {formatDate(inv.createdAt)}</span>
-                    <span className="font-bold text-slate-900 text-sm">{formatCurrency(inv.totalAmount)}</span>
-                  </div>
-
-                  <div className="border-t border-slate-200 pt-2 text-[11px] text-slate-500 flex justify-between">
-                    <span>Paid: {formatCurrency(inv.paidAmount)}</span>
-                    <span className="text-red-700 font-semibold">Balance Due: {formatCurrency(inv.balanceDue)}</span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-center py-6 text-slate-400 text-xs">No invoices on record.</p>
-            )}
+        <div className="card">
+          <div className="card-header">
+            <span className="card-title">Invoices & Statements</span>
+          </div>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Invoice #</th>
+                  <th>Date</th>
+                  <th>Billed Amount</th>
+                  <th>Paid Amount</th>
+                  <th>Balance Due</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {patient.invoices?.length ? (
+                  patient.invoices.map((inv: any) => (
+                    <tr key={inv.id}>
+                      <td style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--primary)" }}>
+                        {inv.invoiceNumber}
+                      </td>
+                      <td style={{ fontFamily: "var(--font-mono)", fontSize: 11.5 }}>
+                        {formatDate(inv.createdAt)}
+                      </td>
+                      <td style={{ fontWeight: 700 }}>{formatCurrency(inv.totalAmount)}</td>
+                      <td style={{ color: "var(--success)" }}>{formatCurrency(inv.paidAmount)}</td>
+                      <td style={{ color: inv.balanceDue > 0 ? "var(--danger)" : "var(--text-muted)", fontWeight: 700 }}>
+                        {formatCurrency(inv.balanceDue)}
+                      </td>
+                      <td>
+                        <span className={`badge ${inv.status === "PAID" ? "badge-green" : "badge-red"}`}>
+                          {inv.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
+                      No invoices recorded.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
       {/* Record Vitals Modal */}
       {isVitalsModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
-              <h2 className="text-base font-bold text-slate-800">Record Patient Vital Signs</h2>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(11, 25, 42, 0.65)",
+            backdropFilter: "blur(4px)",
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+          }}
+        >
+          <div
+            className="card"
+            style={{
+              maxWidth: 520,
+              width: "100%",
+              boxShadow: "var(--shadow-lg)",
+            }}
+          >
+            <div className="card-header">
+              <span className="card-title">Record Vital Signs</span>
               <button
+                type="button"
+                className="btn btn-ghost btn-sm"
                 onClick={() => setIsVitalsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-700"
               >
-                <X className="w-5 h-5" />
+                &times;
               </button>
             </div>
 
-            <form onSubmit={handleSaveVitals} className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="font-semibold text-slate-700 mb-1 block">Systolic BP (mmHg)</label>
+            <form onSubmit={handleSaveVitals} className="card-body">
+              <div className="form-grid form-grid-2" style={{ marginBottom: 12 }}>
+                <div className="form-group">
+                  <label className="form-label required">Systolic BP (mmHg)</label>
                   <input
                     type="number"
                     required
+                    className="form-input"
                     value={vitalsForm.systolicBP}
                     onChange={(e) => setVitalsForm({ ...vitalsForm, systolicBP: e.target.value })}
-                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg"
                   />
                 </div>
-                <div>
-                  <label className="font-semibold text-slate-700 mb-1 block">Diastolic BP (mmHg)</label>
+                <div className="form-group">
+                  <label className="form-label required">Diastolic BP (mmHg)</label>
                   <input
                     type="number"
                     required
+                    className="form-input"
                     value={vitalsForm.diastolicBP}
                     onChange={(e) => setVitalsForm({ ...vitalsForm, diastolicBP: e.target.value })}
-                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg"
                   />
                 </div>
-                <div>
-                  <label className="font-semibold text-slate-700 mb-1 block">Heart Rate (bpm)</label>
+                <div className="form-group">
+                  <label className="form-label">Heart Rate (bpm)</label>
                   <input
                     type="number"
+                    className="form-input"
                     value={vitalsForm.heartRate}
                     onChange={(e) => setVitalsForm({ ...vitalsForm, heartRate: e.target.value })}
-                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg"
                   />
                 </div>
-                <div>
-                  <label className="font-semibold text-slate-700 mb-1 block">Temperature (°F)</label>
+                <div className="form-group">
+                  <label className="form-label">Temperature (°F)</label>
                   <input
                     type="number"
                     step="0.1"
+                    className="form-input"
                     value={vitalsForm.temperature}
                     onChange={(e) => setVitalsForm({ ...vitalsForm, temperature: e.target.value })}
-                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg"
                   />
                 </div>
-                <div>
-                  <label className="font-semibold text-slate-700 mb-1 block">SpO2 Oxygen (%)</label>
+                <div className="form-group">
+                  <label className="form-label">SpO2 Oxygen (%)</label>
                   <input
                     type="number"
+                    className="form-input"
                     value={vitalsForm.spO2}
                     onChange={(e) => setVitalsForm({ ...vitalsForm, spO2: e.target.value })}
-                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg"
                   />
                 </div>
-                <div>
-                  <label className="font-semibold text-slate-700 mb-1 block">Resp Rate (breaths/min)</label>
+                <div className="form-group">
+                  <label className="form-label">Resp Rate (/min)</label>
                   <input
                     type="number"
+                    className="form-input"
                     value={vitalsForm.respiratoryRate}
                     onChange={(e) => setVitalsForm({ ...vitalsForm, respiratoryRate: e.target.value })}
-                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg"
                   />
                 </div>
-                <div>
-                  <label className="font-semibold text-slate-700 mb-1 block">Weight (kg)</label>
+                <div className="form-group">
+                  <label className="form-label">Weight (kg)</label>
                   <input
                     type="number"
                     step="0.1"
+                    className="form-input"
                     value={vitalsForm.weightKg}
                     onChange={(e) => setVitalsForm({ ...vitalsForm, weightKg: e.target.value })}
-                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg"
                   />
                 </div>
-                <div>
-                  <label className="font-semibold text-slate-700 mb-1 block">Height (cm)</label>
+                <div className="form-group">
+                  <label className="form-label">Height (cm)</label>
                   <input
                     type="number"
+                    className="form-input"
                     value={vitalsForm.heightCm}
                     onChange={(e) => setVitalsForm({ ...vitalsForm, heightCm: e.target.value })}
-                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="font-semibold text-slate-700 mb-1 block">Clinical Observation Notes</label>
+              <div className="form-group" style={{ marginBottom: 14 }}>
+                <label className="form-label">Observation Notes</label>
                 <textarea
                   rows={2}
+                  className="form-textarea"
                   value={vitalsForm.notes}
                   onChange={(e) => setVitalsForm({ ...vitalsForm, notes: e.target.value })}
-                  placeholder="e.g. Patient appeared flushed, resting seated for 5 minutes."
-                  className="w-full px-3 py-1.5 border border-slate-200 rounded-lg"
+                  placeholder="Patient reports morning fatigue or dizziness..."
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
                 <button
                   type="button"
+                  className="btn btn-secondary"
                   onClick={() => setIsVitalsModalOpen(false)}
-                  className="px-4 py-2 font-semibold text-slate-600"
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  disabled={savingVitals}
-                  className="px-4 py-2 font-bold bg-teal-600 hover:bg-teal-700 text-white rounded-xl transition"
-                >
+                <button type="submit" disabled={savingVitals} className="btn btn-primary">
                   {savingVitals ? "Saving..." : "Save Vitals"}
                 </button>
               </div>

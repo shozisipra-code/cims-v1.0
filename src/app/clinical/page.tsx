@@ -3,27 +3,10 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import {
-  Stethoscope,
-  User,
-  Heart,
-  AlertTriangle,
-  FileText,
-  Pill,
-  FlaskConical,
-  Plus,
-  Trash2,
-  CheckCircle2,
-  Clock,
-  Sparkles,
-  ShieldCheck,
-  ChevronDown,
-  Info,
-} from "lucide-react";
 import { COMMON_ICD10_CODES } from "@/lib/constants/icd10";
 import { FORMULARY_MEDICATIONS } from "@/lib/constants/medications";
 import { STANDARD_LAB_TESTS } from "@/lib/constants/labTests";
-import { calculateAge, calculateBMI, getBloodPressureStatus, formatDateTime } from "@/lib/utils";
+import { calculateAge, getBloodPressureStatus } from "@/lib/utils";
 import { useRole } from "@/components/layout/RoleContext";
 
 interface PrescriptionRow {
@@ -60,7 +43,7 @@ function ClinicalWorkspaceContent() {
   const [soap, setSoap] = useState({
     chiefComplaint: "",
     hpi: "",
-    physicalExam: "Alert, conscious, oriented x3. CVS: Normal heart sounds. Chest: Clear bilaterally.",
+    physicalExam: "Alert, conscious, oriented x3. CVS: S1+S2 heard. Chest: Clear bilaterally.",
     assessmentPlan: "",
     clinicalNotes: "",
   });
@@ -78,7 +61,7 @@ function ClinicalWorkspaceContent() {
     dosage: FORMULARY_MEDICATIONS[0].defaultDosage,
     frequency: FORMULARY_MEDICATIONS[0].defaultFrequency,
     duration: FORMULARY_MEDICATIONS[0].defaultDuration,
-    instructions: "Take after food",
+    instructions: "Take after meals",
     quantity: 10,
   });
 
@@ -154,7 +137,6 @@ function ClinicalWorkspaceContent() {
       .finally(() => setLoadingPatient(false));
   }, [selectedPatientId]);
 
-  // Handle Medication selection change
   const handleMedSelect = (brandName: string) => {
     const med = FORMULARY_MEDICATIONS.find((m) => m.brandName === brandName);
     if (med) {
@@ -178,7 +160,6 @@ function ClinicalWorkspaceContent() {
     setPrescriptionItems(prescriptionItems.filter((_, i) => i !== index));
   };
 
-  // Handle Lab Test Add
   const addLabTest = () => {
     if (!selectedLabTest) return;
     const test = STANDARD_LAB_TESTS.find((t) => t.testCode === selectedLabTest);
@@ -199,7 +180,6 @@ function ClinicalWorkspaceContent() {
     setOrderedLabs(orderedLabs.filter((l) => l.testName !== testName));
   };
 
-  // Add ICD-10 diagnosis
   const addDiagnosis = (code: string) => {
     const item = COMMON_ICD10_CODES.find((c) => c.code === code);
     if (item && !diagnoses.some((d) => d.icdCode === item.code)) {
@@ -219,12 +199,10 @@ function ClinicalWorkspaceContent() {
     setDiagnoses(diagnoses.filter((d) => d.icdCode !== code));
   };
 
-  // Finalize Consultation & Generate Orders
   const handleFinalizeConsultation = async () => {
     if (!patient) return;
     setFinalizing(true);
     try {
-      // 1. Create or update encounter
       let encId = activeEncounterId;
       if (!encId) {
         const encRes = await fetch("/api/encounters", {
@@ -244,7 +222,6 @@ function ClinicalWorkspaceContent() {
         }
       }
 
-      // Update SOAP and mark FINALIZED
       await fetch("/api/encounters", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -259,7 +236,6 @@ function ClinicalWorkspaceContent() {
         }),
       });
 
-      // 2. Save Diagnoses
       for (const dx of diagnoses) {
         await fetch("/api/diagnoses", {
           method: "POST",
@@ -273,7 +249,6 @@ function ClinicalWorkspaceContent() {
         });
       }
 
-      // 3. Save Prescriptions if any
       if (prescriptionItems.length > 0) {
         await fetch("/api/prescriptions", {
           method: "POST",
@@ -288,7 +263,6 @@ function ClinicalWorkspaceContent() {
         });
       }
 
-      // 4. Save Lab Orders if any
       if (orderedLabs.length > 0) {
         await fetch("/api/lab-orders", {
           method: "POST",
@@ -303,7 +277,7 @@ function ClinicalWorkspaceContent() {
         });
       }
 
-      // 5. Generate Point-of-Care Billing Invoice automatically
+      // Generate invoice
       const billItems = [
         {
           description: `Physician Consultation (${currentUser.name})`,
@@ -348,7 +322,6 @@ function ClinicalWorkspaceContent() {
       });
 
       setFinalizedSuccess(true);
-      // Refresh patient data
       fetch(`/api/patients/${patient.id}`)
         .then((r) => r.json())
         .then((d) => {
@@ -375,26 +348,25 @@ function ClinicalWorkspaceContent() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Top Clinician Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="clinical-workspace-page">
+      {/* Header */}
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2.5">
-            <Stethoscope className="w-6 h-6 text-teal-600" />
-            Doctor Clinical Workspace & EMR
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Conduct outpatient encounters, document SOAP notes, add ICD-10 diagnoses, and issue e-prescriptions.
+          <h1 className="page-title">Doctor Clinical Workspace</h1>
+          <p className="page-subtitle">
+            SOAP clinical notes, ICD-10 coding, vital signs, and electronic prescription pad.
           </p>
         </div>
 
-        {/* Patient Selector */}
-        <div className="flex items-center gap-3">
-          <label className="text-xs font-semibold text-slate-600">Active Patient:</label>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)" }}>
+            Active Patient:
+          </span>
           <select
             value={selectedPatientId}
             onChange={(e) => setSelectedPatientId(e.target.value)}
-            className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="form-select"
+            style={{ width: "auto", minWidth: 220, fontWeight: 700 }}
           >
             {patients.map((p) => (
               <option key={p.id} value={p.id}>
@@ -406,455 +378,358 @@ function ClinicalWorkspaceContent() {
       </div>
 
       {finalizedSuccess && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between animate-in fade-in">
-          <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-            <div>
-              <p className="text-xs font-bold text-emerald-900">
-                Clinical Encounter Successfully Finalized!
-              </p>
-              <p className="text-[11px] text-emerald-700">
-                Orders have been dispatched to Pharmacy and Laboratory. An itemized invoice was generated.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link
-              href={`/patients/${patient?.id}`}
-              className="text-xs px-3 py-1.5 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700"
-            >
-              View Patient 360
-            </Link>
-          </div>
+        <div className="alert alert-success" style={{ marginBottom: 16 }}>
+          <span>
+            <strong>Encounter Finalized:</strong> Clinical note signed. Orders dispatched to Pharmacy & Laboratory.
+          </span>
+          <Link
+            href={`/patients/${patient?.id}`}
+            className="btn btn-secondary btn-sm"
+            style={{ marginLeft: "auto" }}
+          >
+            View Patient 360
+          </Link>
         </div>
       )}
 
       {/* Patient Bio & Vitals Overview Bar */}
       {patient && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-xl bg-teal-600 text-white font-bold text-base flex items-center justify-center shadow-sm">
-                {patient.firstName[0]}
-                {patient.lastName[0]}
-              </div>
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="card-body" style={{ padding: 14 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
               <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base font-bold text-slate-900">
-                    {patient.firstName} {patient.lastName}
-                  </h2>
-                  <span className="font-mono text-xs font-bold text-teal-800 bg-teal-50 px-2 py-0.2 rounded border border-teal-200">
-                    {patient.mrn}
+                <strong style={{ fontSize: 15, color: "var(--primary)" }}>
+                  {patient.firstName} {patient.lastName}
+                </strong>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--text-muted)", marginLeft: 8 }}>
+                  {patient.mrn} • {calculateAge(patient.dateOfBirth)} yrs • {patient.gender}
+                </span>
+              </div>
+
+              {/* Vitals summary chips */}
+              <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                <div>
+                  <span className="stat-label">Blood Pressure:</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, marginLeft: 4 }}>
+                    {latestVitals ? `${latestVitals.systolicBP}/${latestVitals.diastolicBP}` : "--"}
+                  </span>
+                  {bpStatus && (
+                    <span className={`badge ${bpStatus.status === "Normal" ? "badge-green" : "badge-amber"}`} style={{ marginLeft: 4 }}>
+                      {bpStatus.status}
+                    </span>
+                  )}
+                </div>
+
+                <div>
+                  <span className="stat-label">Heart Rate:</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, marginLeft: 4 }}>
+                    {latestVitals?.heartRate ? `${latestVitals.heartRate} bpm` : "--"}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {calculateAge(patient.dateOfBirth)} yrs • {patient.gender} • Blood:{" "}
-                  <strong className="text-red-600">{patient.bloodGroup || "Unknown"}</strong>
-                </p>
+
+                <div>
+                  <span className="stat-label">SpO2:</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, marginLeft: 4 }}>
+                    {latestVitals?.spO2 ? `${latestVitals.spO2}%` : "--"}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="stat-label">BMI:</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, marginLeft: 4 }}>
+                    {latestVitals?.bmi || "--"}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Quick Vitals Metrics */}
-            <div className="flex items-center gap-4 text-xs bg-slate-50 p-3 rounded-xl border border-slate-200 flex-wrap">
-              <div>
-                <span className="text-[10px] text-slate-400 block uppercase font-bold">Blood Pressure</span>
-                {latestVitals ? (
-                  <span className="font-bold text-slate-800">
-                    {latestVitals.systolicBP}/{latestVitals.diastolicBP} mmHg{" "}
-                    <span className={`text-[10px] px-1 rounded font-semibold ${bpStatus?.color}`}>
-                      {bpStatus?.status}
-                    </span>
-                  </span>
-                ) : (
-                  <span className="text-slate-400">--</span>
-                )}
-              </div>
-
-              <div className="h-6 w-px bg-slate-200"></div>
-
-              <div>
-                <span className="text-[10px] text-slate-400 block uppercase font-bold">Heart Rate</span>
-                <span className="font-bold text-slate-800">
-                  {latestVitals?.heartRate ? `${latestVitals.heartRate} bpm` : "--"}
+            {allergies.length > 0 && allergies[0] !== "None known" && (
+              <div className="alert alert-warning" style={{ marginTop: 10, padding: "8px 12px" }}>
+                <span style={{ fontSize: 12 }}>
+                  <strong>Known Allergies:</strong> {allergies.join(", ")}
                 </span>
               </div>
+            )}
+          </div>
+        </div>
+      )}
 
-              <div className="h-6 w-px bg-slate-200"></div>
-
-              <div>
-                <span className="text-[10px] text-slate-400 block uppercase font-bold">Temperature</span>
-                <span className="font-bold text-slate-800">
-                  {latestVitals?.temperature ? `${latestVitals.temperature}°F` : "--"}
-                </span>
+      {/* 2-Column Editor Grid */}
+      <div className="grid-2">
+        {/* Left Column: SOAP Notes */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* S - Subjective */}
+          <div className="card">
+            <div className="card-header">
+              <span className="card-title">Subjective (S) - Chief Complaint & HPI</span>
+            </div>
+            <div className="card-body" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div className="form-group">
+                <label className="form-label required">Chief Complaint</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={soap.chiefComplaint}
+                  onChange={(e) => setSoap({ ...soap, chiefComplaint: e.target.value })}
+                  placeholder="e.g. Cough and low-grade fever for 3 days"
+                />
               </div>
 
-              <div className="h-6 w-px bg-slate-200"></div>
-
-              <div>
-                <span className="text-[10px] text-slate-400 block uppercase font-bold">SpO2 Oxygen</span>
-                <span className="font-bold text-slate-800">
-                  {latestVitals?.spO2 ? `${latestVitals.spO2}%` : "--"}
-                </span>
-              </div>
-
-              <div className="h-6 w-px bg-slate-200"></div>
-
-              <div>
-                <span className="text-[10px] text-slate-400 block uppercase font-bold">BMI</span>
-                <span className="font-bold text-slate-800">
-                  {latestVitals?.bmi ? `${latestVitals.bmi}` : "--"}
-                </span>
+              <div className="form-group">
+                <label className="form-label">History of Present Illness (HPI)</label>
+                <textarea
+                  rows={3}
+                  className="form-textarea"
+                  value={soap.hpi}
+                  onChange={(e) => setSoap({ ...soap, hpi: e.target.value })}
+                  placeholder="Document progression, duration, aggravating factors..."
+                />
               </div>
             </div>
           </div>
 
-          {/* Prominent Allergy Banner */}
-          {allergies.length > 0 && allergies[0] !== "None known" && (
-            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-amber-50 border border-amber-300 text-xs text-amber-900 font-semibold">
-              <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-              <span>Allergy Alert: Patient has documented allergies to </span>
-              <span className="underline font-bold">{allergies.join(", ")}</span>
+          {/* O - Objective */}
+          <div className="card">
+            <div className="card-header">
+              <span className="card-title">Objective (O) - Physical Examination</span>
             </div>
-          )}
-        </div>
-      )}
-
-      {/* Main Consultation Editor Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: SOAP Note Editor */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                <FileText className="w-4 h-4 text-teal-600" />
-                SOAP Clinical Documentation
-              </h2>
-              <span className="text-[11px] text-slate-400 font-medium">Standard Clinical Notes Format</span>
+            <div className="card-body">
+              <textarea
+                rows={3}
+                className="form-textarea"
+                value={soap.physicalExam}
+                onChange={(e) => setSoap({ ...soap, physicalExam: e.target.value })}
+              />
             </div>
+          </div>
 
-            {/* S - Subjective */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-teal-100 text-teal-800 font-bold text-xs flex items-center justify-center">
-                  S
-                </span>
-                <h3 className="text-xs font-bold text-slate-800 uppercase">Subjective History</h3>
-              </div>
-
-              <div>
-                <label className="text-[11px] font-semibold text-slate-600 block mb-1">
-                  Chief Complaint *
-                </label>
-                <input
-                  type="text"
-                  value={soap.chiefComplaint}
-                  onChange={(e) => setSoap({ ...soap, chiefComplaint: e.target.value })}
-                  placeholder="e.g. Headache for 3 days, sore throat and dry cough."
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-semibold text-slate-600 block mb-1">
-                  History of Present Illness (HPI)
-                </label>
-                <textarea
-                  rows={3}
-                  value={soap.hpi}
-                  onChange={(e) => setSoap({ ...soap, hpi: e.target.value })}
-                  placeholder="Describe onset, duration, character, aggravating and relieving factors..."
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                />
-              </div>
+          {/* A - Assessment & ICD-10 */}
+          <div className="card">
+            <div className="card-header">
+              <span className="card-title">Assessment (A) - ICD-10 Diagnoses</span>
             </div>
+            <div className="card-body" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <select
+                value={selectedIcdCode}
+                onChange={(e) => {
+                  setSelectedIcdCode(e.target.value);
+                  if (e.target.value) addDiagnosis(e.target.value);
+                }}
+                className="form-select"
+              >
+                <option value="">-- Add ICD-10 Diagnostic Code --</option>
+                {COMMON_ICD10_CODES.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.code} - {c.description} ({c.category})
+                  </option>
+                ))}
+              </select>
 
-            {/* O - Objective */}
-            <div className="space-y-3 pt-3 border-t border-slate-100">
-              <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-800 font-bold text-xs flex items-center justify-center">
-                  O
-                </span>
-                <h3 className="text-xs font-bold text-slate-800 uppercase">
-                  Objective / Physical Examination
-                </h3>
-              </div>
-
-              <div>
-                <textarea
-                  rows={3}
-                  value={soap.physicalExam}
-                  onChange={(e) => setSoap({ ...soap, physicalExam: e.target.value })}
-                  placeholder="Document physical exam findings, general appearance, systemic exams..."
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                />
-              </div>
-            </div>
-
-            {/* A - Assessment & Diagnoses */}
-            <div className="space-y-3 pt-3 border-t border-slate-100">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-800 font-bold text-xs flex items-center justify-center">
-                    A
-                  </span>
-                  <h3 className="text-xs font-bold text-slate-800 uppercase">
-                    Assessment & ICD-10 Diagnoses
-                  </h3>
-                </div>
-              </div>
-
-              {/* ICD-10 Selector */}
-              <div className="flex gap-2">
-                <select
-                  value={selectedIcdCode}
-                  onChange={(e) => {
-                    setSelectedIcdCode(e.target.value);
-                    if (e.target.value) addDiagnosis(e.target.value);
-                  }}
-                  className="flex-1 px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg"
-                >
-                  <option value="">-- Add ICD-10 Diagnosis (Search Common Conditions) --</option>
-                  {COMMON_ICD10_CODES.map((icd) => (
-                    <option key={icd.code} value={icd.code}>
-                      {icd.code} - {icd.description} ({icd.category})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Added Diagnoses Badges */}
               {diagnoses.length > 0 && (
-                <div className="space-y-1.5">
-                  {diagnoses.map((dx) => (
-                    <div
-                      key={dx.icdCode}
-                      className="p-2.5 rounded-lg bg-teal-50/70 border border-teal-200 flex items-center justify-between text-xs"
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {diagnoses.map((d) => (
+                    <span
+                      key={d.icdCode}
+                      className="badge badge-teal"
+                      style={{ padding: "4px 8px", fontSize: 11.5 }}
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-teal-800">{dx.icdCode}</span>
-                        <span className="text-slate-800">{dx.description}</span>
-                        <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-teal-200 text-teal-900">
-                          {dx.type}
-                        </span>
+                      <strong>{d.icdCode}</strong> {d.description}
+                      <button
+                        type="button"
+                        onClick={() => removeDiagnosis(d.icdCode)}
+                        style={{ border: 0, background: "transparent", color: "var(--danger)", marginLeft: 6, cursor: "pointer" }}
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* P - Plan */}
+          <div className="card">
+            <div className="card-header">
+              <span className="card-title">Plan (P) - Counseling & Management</span>
+            </div>
+            <div className="card-body">
+              <textarea
+                rows={3}
+                className="form-textarea"
+                value={soap.assessmentPlan}
+                onChange={(e) => setSoap({ ...soap, assessmentPlan: e.target.value })}
+                placeholder="Care instructions, dietary recommendations, follow-up..."
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Prescriptions & Diagnostic Lab Orders */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* e-Prescription Pad */}
+          <div className="card">
+            <div className="card-header">
+              <span className="card-title">Electronic Prescription (e-Rx)</span>
+              <span className="badge badge-green">Formulary Linked</span>
+            </div>
+            <div className="card-body" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {prescriptionItems.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {prescriptionItems.map((item, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        padding: "8px 12px",
+                        background: "var(--surface-2)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 4,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div>
+                        <strong style={{ color: "var(--primary)", fontSize: 12.5 }}>{item.medicationName}</strong>
+                        <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                          {item.dosage} • {item.frequency} • {item.duration}
+                        </div>
                       </div>
                       <button
-                        onClick={() => removeDiagnosis(dx.icdCode)}
-                        className="text-slate-400 hover:text-red-600"
+                        type="button"
+                        onClick={() => removePrescriptionItem(idx)}
+                        className="btn btn-ghost btn-sm"
+                        style={{ color: "var(--danger)" }}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        &times;
                       </button>
                     </div>
                   ))}
                 </div>
               )}
-            </div>
 
-            {/* P - Plan & Clinical Notes */}
-            <div className="space-y-3 pt-3 border-t border-slate-100">
-              <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-center">
-                  P
-                </span>
-                <h3 className="text-xs font-bold text-slate-800 uppercase">
-                  Care Plan & Patient Counseling
-                </h3>
-              </div>
+              {/* Add Med Mini Form */}
+              <div style={{ background: "var(--surface-2)", padding: 12, borderRadius: 6, border: "1px solid var(--border)" }}>
+                <div className="form-group" style={{ marginBottom: 8 }}>
+                  <label className="form-label">Drug / Formulary Item</label>
+                  <select
+                    className="form-select"
+                    value={newRx.medicationName}
+                    onChange={(e) => handleMedSelect(e.target.value)}
+                  >
+                    {FORMULARY_MEDICATIONS.map((m) => (
+                      <option key={m.brandName} value={m.brandName}>
+                        {m.brandName} ({m.genericName} - {m.strength})
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              <div>
-                <textarea
-                  rows={3}
-                  value={soap.assessmentPlan}
-                  onChange={(e) => setSoap({ ...soap, assessmentPlan: e.target.value })}
-                  placeholder="Document therapeutic plan, patient lifestyle recommendations, diet, follow-up..."
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                />
+                <div className="form-grid form-grid-2" style={{ marginBottom: 8 }}>
+                  <div className="form-group">
+                    <label className="form-label">Dosage</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={newRx.dosage}
+                      onChange={(e) => setNewRx({ ...newRx, dosage: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Duration</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={newRx.duration}
+                      onChange={(e) => setNewRx({ ...newRx, duration: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 10 }}>
+                  <label className="form-label">Frequency Schedule</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={newRx.frequency}
+                    onChange={(e) => setNewRx({ ...newRx, frequency: e.target.value })}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={addPrescriptionItem}
+                  className="btn btn-secondary btn-sm"
+                  style={{ width: "100%", justifyContent: "center" }}
+                >
+                  + Add Medication
+                </button>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Right 1 Col: Orders Panel (e-Rx, Lab Orders, Finalize) */}
-        <div className="space-y-6">
-          {/* E-Prescription Pad */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                <Pill className="w-4 h-4 text-emerald-600" />
-                Electronic Prescription (e-Rx)
-              </h3>
-              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                Formulary Integrated
-              </span>
+          {/* Lab Test Orders */}
+          <div className="card">
+            <div className="card-header">
+              <span className="card-title">Diagnostic Laboratory Orders</span>
+              <span className="badge badge-blue">LIS</span>
             </div>
+            <div className="card-body" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {orderedLabs.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {orderedLabs.map((l) => (
+                    <span key={l.testName} className="badge badge-blue" style={{ padding: "4px 8px" }}>
+                      {l.testName}
+                      <button
+                        type="button"
+                        onClick={() => removeLabTest(l.testName)}
+                        style={{ border: 0, background: "transparent", color: "var(--danger)", marginLeft: 6, cursor: "pointer" }}
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
 
-            {/* Prescribed Items Table */}
-            {prescriptionItems.length > 0 && (
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {prescriptionItems.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs flex items-center justify-between"
-                  >
-                    <div>
-                      <p className="font-bold text-teal-800">{item.medicationName}</p>
-                      <p className="text-[11px] text-slate-500">
-                        {item.dosage} • {item.frequency} • {item.duration}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => removePrescriptionItem(idx)}
-                      className="text-slate-400 hover:text-red-600"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Add Medication Mini-Form */}
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5 text-xs">
-              <div>
-                <label className="font-semibold text-slate-700 mb-1 block">Drug / Formulary</label>
+              <div style={{ display: "flex", gap: 8 }}>
                 <select
-                  value={newRx.medicationName}
-                  onChange={(e) => handleMedSelect(e.target.value)}
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                  className="form-select"
+                  value={selectedLabTest}
+                  onChange={(e) => setSelectedLabTest(e.target.value)}
+                  style={{ flex: 1 }}
                 >
-                  {FORMULARY_MEDICATIONS.map((m) => (
-                    <option key={m.brandName} value={m.brandName}>
-                      {m.brandName} ({m.genericName} - {m.strength})
+                  <option value="">-- Select Lab Test Panel --</option>
+                  {STANDARD_LAB_TESTS.map((t) => (
+                    <option key={t.testCode} value={t.testCode}>
+                      {t.testName} (${t.price.toFixed(2)})
                     </option>
                   ))}
                 </select>
+                <button type="button" onClick={addLabTest} className="btn btn-secondary btn-sm">
+                  Add Test
+                </button>
               </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="font-semibold text-slate-700 mb-1 block">Dosage</label>
-                  <input
-                    type="text"
-                    value={newRx.dosage}
-                    onChange={(e) => setNewRx({ ...newRx, dosage: e.target.value })}
-                    className="w-full px-2.5 py-1 bg-white border border-slate-200 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="font-semibold text-slate-700 mb-1 block">Duration</label>
-                  <input
-                    type="text"
-                    value={newRx.duration}
-                    onChange={(e) => setNewRx({ ...newRx, duration: e.target.value })}
-                    className="w-full px-2.5 py-1 bg-white border border-slate-200 rounded-lg"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="font-semibold text-slate-700 mb-1 block">Frequency / Schedule</label>
-                <input
-                  type="text"
-                  value={newRx.frequency}
-                  onChange={(e) => setNewRx({ ...newRx, frequency: e.target.value })}
-                  className="w-full px-2.5 py-1 bg-white border border-slate-200 rounded-lg"
-                />
-              </div>
-
-              <button
-                type="button"
-                onClick={addPrescriptionItem}
-                className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-sm"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Add Medication
-              </button>
             </div>
           </div>
 
-          {/* Diagnostic Lab Order Pad */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                <FlaskConical className="w-4 h-4 text-indigo-600" />
-                Diagnostic Lab Orders
-              </h3>
-              <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">
-                LIS
-              </span>
-            </div>
-
-            {/* Ordered tests badges */}
-            {orderedLabs.length > 0 && (
-              <div className="space-y-1.5">
-                {orderedLabs.map((lab) => (
-                  <div
-                    key={lab.testName}
-                    className="p-2 rounded-lg bg-indigo-50/70 border border-indigo-200 flex items-center justify-between text-xs"
-                  >
-                    <div>
-                      <p className="font-bold text-indigo-900">{lab.testName}</p>
-                      <p className="text-[10px] text-slate-500">{lab.category}</p>
-                    </div>
-                    <button
-                      onClick={() => removeLabTest(lab.testName)}
-                      className="text-slate-400 hover:text-red-600"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <select
-                value={selectedLabTest}
-                onChange={(e) => setSelectedLabTest(e.target.value)}
-                className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs"
-              >
-                <option value="">-- Choose Diagnostic Test / Panel --</option>
-                {STANDARD_LAB_TESTS.map((t) => (
-                  <option key={t.testCode} value={t.testCode}>
-                    {t.testName} (${t.price.toFixed(2)})
-                  </option>
-                ))}
-              </select>
-
+          {/* Finalize Action Card */}
+          <div className="card">
+            <div className="card-body">
+              <h4 style={{ color: "var(--primary)", marginBottom: 6 }}>Finalize & Sign Clinical Encounter</h4>
+              <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 14 }}>
+                Locks SOAP notes, dispatches prescriptions to Pharmacy, orders to LIS, and compiles itemized patient bill.
+              </p>
               <button
                 type="button"
-                onClick={addLabTest}
-                className="w-full py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-sm"
+                onClick={handleFinalizeConsultation}
+                disabled={finalizing || !patient}
+                className="btn btn-primary"
+                style={{ width: "100%", justifyContent: "center", padding: "10px 16px" }}
               >
-                <Plus className="w-3.5 h-3.5" />
-                Order Selected Lab Test
+                {finalizing ? "Finalizing Note..." : "Sign & Finalize Consultation"}
               </button>
             </div>
-          </div>
-
-          {/* Finalize Consultation CTA Card */}
-          <div className="bg-gradient-to-br from-teal-800 to-slate-900 rounded-2xl p-5 text-white shadow-lg space-y-3">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-teal-400" />
-              <h3 className="font-bold text-sm">Finalize & Sign Encounter</h3>
-            </div>
-            <p className="text-[11px] text-teal-100/80 leading-relaxed">
-              Completes consultation note, transmits e-prescriptions to Pharmacy, generates lab work orders, and prepares the patient invoice.
-            </p>
-
-            <button
-              onClick={handleFinalizeConsultation}
-              disabled={finalizing || !patient}
-              className="w-full py-2.5 bg-teal-400 hover:bg-teal-300 text-slate-950 font-bold text-xs rounded-xl transition shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {finalizing ? (
-                "Finalizing Clinical Note..."
-              ) : (
-                <>
-                  <CheckCircle2 className="w-4 h-4" />
-                  Sign & Finalize Encounter
-                </>
-              )}
-            </button>
           </div>
         </div>
       </div>
@@ -864,7 +739,7 @@ function ClinicalWorkspaceContent() {
 
 export default function ClinicalWorkspacePage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-400">Loading Doctor Workspace...</div>}>
+    <Suspense fallback={<div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>Loading Clinical Workspace...</div>}>
       <ClinicalWorkspaceContent />
     </Suspense>
   );

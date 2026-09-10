@@ -1,16 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  ShieldCheck,
-  Users,
-  Search,
-  Activity,
-  Server,
-  Lock,
-  Calendar,
-  Filter,
-} from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
 import { useRole } from "@/components/layout/RoleContext";
 
@@ -45,83 +35,72 @@ export default function AdminPage() {
   });
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="admin-page">
+      {/* Page Header */}
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2.5">
-            <ShieldCheck className="w-6 h-6 text-teal-600" />
-            System Administration & HIPAA Audit Trail
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Role-Based Access Control (RBAC), user directory, and immutable clinical activity auditing.
+          <h1 className="page-title">User Management & Audit Log</h1>
+          <p className="page-subtitle">
+            Role-Based Access Control (RBAC), user directory, and immutable HIPAA compliance logging.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3.5 py-1.5 rounded-xl text-xs font-bold text-emerald-800">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>HIPAA Audit Engine Active</span>
+        <span className="badge badge-green" style={{ fontSize: 11.5, padding: "6px 12px" }}>
+          Audit Engine Active
+        </span>
+      </div>
+
+      {/* Metrics Row (LIMS grid-3 style) */}
+      <div className="grid-3" style={{ marginBottom: 16 }}>
+        <div className="stat-card blue">
+          <div className="stat-label">Total Clinical Encounters</div>
+          <div className="stat-value">{loading ? "..." : metrics.totalEncounters}</div>
+          <div className="stat-sub">Physician visits recorded</div>
+        </div>
+
+        <div className="stat-card teal">
+          <div className="stat-label">Electronic Prescriptions</div>
+          <div className="stat-value">{loading ? "..." : metrics.totalPrescriptions}</div>
+          <div className="stat-sub">Formulary orders generated</div>
+        </div>
+
+        <div className="stat-card green">
+          <div className="stat-label">Diagnostic Lab Orders</div>
+          <div className="stat-value">{loading ? "..." : metrics.totalLabOrders}</div>
+          <div className="stat-sub">Accessioned in pathology</div>
         </div>
       </div>
 
-      {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <span className="text-xs font-semibold text-slate-500 block">Total Clinical Encounters</span>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{loading ? "..." : metrics.totalEncounters}</p>
-          <p className="text-[11px] text-teal-700 mt-0.5">Physician visits recorded</p>
-        </div>
-
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <span className="text-xs font-semibold text-slate-500 block">Electronic Prescriptions</span>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{loading ? "..." : metrics.totalPrescriptions}</p>
-          <p className="text-[11px] text-emerald-700 mt-0.5">Formulary orders generated</p>
-        </div>
-
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <span className="text-xs font-semibold text-slate-500 block">Diagnostic Lab Orders</span>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{loading ? "..." : metrics.totalLabOrders}</p>
-          <p className="text-[11px] text-indigo-700 mt-0.5">Accessioned in pathology</p>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex border-b border-slate-200 bg-white rounded-xl px-2 shadow-sm">
+      {/* Tabs Row */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
         <button
+          type="button"
           onClick={() => setActiveTab("audit")}
-          className={`px-4 py-3 text-xs font-bold border-b-2 flex items-center gap-2 transition ${
-            activeTab === "audit"
-              ? "border-teal-600 text-teal-700"
-              : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
+          className={`btn ${activeTab === "audit" ? "btn-primary" : "btn-secondary"} btn-sm`}
         >
-          <ShieldCheck className="w-4 h-4" />
-          Audit Trail Logs ({auditLogs.length})
+          Compliance Audit Log ({auditLogs.length})
         </button>
-
         <button
+          type="button"
           onClick={() => setActiveTab("staff")}
-          className={`px-4 py-3 text-xs font-bold border-b-2 flex items-center gap-2 transition ${
-            activeTab === "staff"
-              ? "border-teal-600 text-teal-700"
-              : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
+          className={`btn ${activeTab === "staff" ? "btn-primary" : "btn-secondary"} btn-sm`}
         >
-          <Users className="w-4 h-4" />
-          Staff Directory & RBAC ({users.length})
+          Staff Accounts & Roles ({users.length})
         </button>
       </div>
 
-      {/* Tab 1: Audit Logs */}
+      {/* Tab 1: Audit Log */}
       {activeTab === "audit" && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden space-y-4">
-          <div className="p-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50">
-            <div className="flex items-center gap-2 text-xs">
-              <span className="font-semibold text-slate-500">Filter Action:</span>
+        <div className="card">
+          <div className="card-header">
+            <span className="card-title">Immutable Healthcare Activity Trail</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 11.5, color: "var(--text-muted)", fontWeight: 600 }}>Action Filter:</span>
               <select
                 value={actionFilter}
                 onChange={(e) => setActionFilter(e.target.value)}
-                className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold"
+                className="form-select"
+                style={{ width: "auto", padding: "4px 8px", fontSize: 11.5 }}
               >
                 <option value="ALL">All Actions</option>
                 <option value="CREATE">CREATE</option>
@@ -130,71 +109,72 @@ export default function AdminPage() {
                 <option value="UPDATE">UPDATE</option>
               </select>
             </div>
-
-            <span className="text-[11px] text-slate-400">
-              Immutable logs generated according to Healthcare Privacy regulations
-            </span>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-600">
-              <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
+          <div className="table-wrap">
+            <table>
+              <thead>
                 <tr>
-                  <th className="px-5 py-3">Timestamp</th>
-                  <th className="px-4 py-3">Staff Actor / Role</th>
-                  <th className="px-4 py-3">Action</th>
-                  <th className="px-4 py-3">Resource</th>
-                  <th className="px-4 py-3">Details</th>
-                  <th className="px-4 py-3">IP Address</th>
+                  <th>Timestamp</th>
+                  <th>Staff Actor</th>
+                  <th>Action</th>
+                  <th>Resource</th>
+                  <th>Details</th>
+                  <th>IP Address</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
-                      Loading audit logs...
+                    <td colSpan={6} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
+                      Loading audit records...
                     </td>
                   </tr>
                 ) : filteredLogs.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
+                    <td colSpan={6} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
                       No logs matching selected action.
                     </td>
                   </tr>
                 ) : (
                   filteredLogs.map((log) => (
-                    <tr key={log.id} className="hover:bg-slate-50/80 transition">
-                      <td className="px-5 py-3 font-mono text-[11px] text-slate-500 whitespace-nowrap">
+                    <tr key={log.id}>
+                      <td style={{ fontFamily: "var(--font-mono)", fontSize: 11.5 }}>
                         {formatDateTime(log.timestamp)}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <p className="font-bold text-slate-900">{log.userName || "System"}</p>
-                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 font-semibold text-slate-600">
-                          {log.userRole || "SERVICE"}
-                        </span>
+
+                      <td>
+                        <strong>{log.userName || "System"}</strong>
+                        <div style={{ fontSize: 10.5, color: "var(--text-muted)" }}>{log.userRole}</div>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
+
+                      <td>
                         <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          className={`badge ${
                             log.action === "FINALIZE"
-                              ? "bg-purple-100 text-purple-800"
+                              ? "badge-blue"
                               : log.action === "CREATE"
-                              ? "bg-teal-100 text-teal-800"
+                              ? "badge-teal"
                               : log.action === "DISPENSE"
-                              ? "bg-emerald-100 text-emerald-800"
-                              : "bg-slate-100 text-slate-700"
+                              ? "badge-green"
+                              : "badge-gray"
                           }`}
                         >
                           {log.action}
                         </span>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="font-semibold text-slate-700">{log.resource}</span>
+
+                      <td>
+                        <strong style={{ fontSize: 11.5, color: "var(--text-secondary)" }}>
+                          {log.resource}
+                        </strong>
                       </td>
-                      <td className="px-4 py-3 max-w-md">
-                        <p className="text-slate-700">{log.details}</p>
+
+                      <td style={{ maxWidth: 400 }}>
+                        <span style={{ fontSize: 12 }}>{log.details}</span>
                       </td>
-                      <td className="px-4 py-3 font-mono text-[11px] text-slate-400 whitespace-nowrap">
+
+                      <td style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-muted)" }}>
                         {log.ipAddress || "127.0.0.1"}
                       </td>
                     </tr>
@@ -206,59 +186,43 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Tab 2: Staff Directory */}
+      {/* Tab 2: Staff Accounts */}
       {activeTab === "staff" && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-600">
-              <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
+        <div className="card">
+          <div className="card-header">
+            <span className="card-title">Staff Members & Permissions ({users.length})</span>
+          </div>
+
+          <div className="table-wrap">
+            <table>
+              <thead>
                 <tr>
-                  <th className="px-5 py-3">Staff Member</th>
-                  <th className="px-4 py-3">Role & Permissions</th>
-                  <th className="px-4 py-3">Department</th>
-                  <th className="px-4 py-3">License / Registration #</th>
-                  <th className="px-4 py-3">Contact</th>
+                  <th>Staff Member</th>
+                  <th>Assigned Role</th>
+                  <th>Department</th>
+                  <th>License / Registration</th>
+                  <th>Contact</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody>
                 {users.map((u) => (
-                  <tr key={u.id} className="hover:bg-slate-50/80 transition">
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
-                          {u.avatar ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={u.avatar} alt={u.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full bg-teal-600 text-white font-bold flex items-center justify-center text-xs">
-                              {u.name[0]}
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-900">{u.name}</p>
-                          <p className="text-[11px] text-slate-400">{u.email}</p>
-                        </div>
-                      </div>
+                  <tr key={u.id}>
+                    <td>
+                      <strong>{u.name}</strong>
+                      <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{u.email}</div>
                     </td>
 
-                    <td className="px-4 py-3.5 whitespace-nowrap">
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
-                        {u.role}
-                      </span>
+                    <td>
+                      <span className="badge badge-blue">{u.role}</span>
                     </td>
 
-                    <td className="px-4 py-3.5">
-                      <span className="text-slate-700 font-medium">{u.department || "Hospital Wide"}</span>
-                    </td>
+                    <td>{u.department || "Hospital Wide"}</td>
 
-                    <td className="px-4 py-3.5 font-mono text-slate-600">
+                    <td style={{ fontFamily: "var(--font-mono)", fontSize: 11.5 }}>
                       {u.licenseNumber || "N/A"}
                     </td>
 
-                    <td className="px-4 py-3.5 text-slate-500">
-                      {u.phone || "--"}
-                    </td>
+                    <td>{u.phone || "--"}</td>
                   </tr>
                 ))}
               </tbody>
