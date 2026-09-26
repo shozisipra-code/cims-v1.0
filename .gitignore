@@ -5,9 +5,11 @@
 
 # testing
 /coverage
+/.artifacts/
 
 # next.js
 /.next/
+**/.next/
 /out/
 
 # production
@@ -25,6 +27,7 @@ yarn-error.log*
 # local env files
 .env*.local
 .env
+**/.env
 
 # vercel
 .vercel
@@ -38,3 +41,5 @@ dev.db
 dev.db-journal
 prisma/*.db
 prisma/*.db-journal
+backend/prisma/*.db
+backend/prisma/*.db-journal
